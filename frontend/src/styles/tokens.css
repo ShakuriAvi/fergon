@@ -1,0 +1,147 @@
+/* ============================================================
+   Schoolyard Design System — tokens
+   Ported from the fergon.html design export. Hebrew (RTL) build.
+   ============================================================ */
+
+:root {
+  /* ---------- Color: brand ---------- */
+  --primary:        #2D5A3D;   /* Forest green   */
+  --primary-700:    #214530;   /* hover/pressed  */
+  --primary-200:    #B7CDB9;
+  --primary-100:    #DCE7DA;
+  --primary-50:     #ECF1E5;
+
+  --accent:         #C8553D;   /* Terracotta     */
+  --accent-700:     #A2412E;
+  --accent-100:     #F5D8CE;
+  --accent-50:      #FBEDE7;
+
+  --info:           #3E5C8B;   /* Navy chalk     */
+  --info-100:       #CFD9E7;
+  --info-50:        #E7EDF4;
+
+  /* ---------- Color: neutrals / paper ---------- */
+  --paper:          #FAF6EE;   /* base canvas    */
+  --paper-sink:     #F3EDDF;   /* hover surface  */
+  --card-cream:     #FFFBF2;   /* card surface   */
+  --rule:           #E5DDC9;   /* hairline border */
+  --rule-strong:    #C8BFA6;
+
+  --ink:            #1F1A14;   /* primary text   */
+  --ink-2:          #4A4337;   /* secondary text */
+  --ink-3:          #7A7160;   /* tertiary / placeholder */
+  --ink-4:          #A89E89;   /* disabled       */
+
+  /* ---------- Color: semantic ---------- */
+  --success:        #2D5A3D;
+  --success-bg:     #ECF1E5;
+  --neutral-bg:     #F3EDDF;
+
+  /* Gold — reserved for points & stars */
+  --gold:        #E8B547;
+  --gold-deep:   #B07A1E;
+  --gold-50:     #FBF1D7;
+  --gold-100:    #F6E4B5;
+
+  /* ---------- Typography: families (Heebo for Hebrew) ---------- */
+  --font-display: 'Heebo', system-ui, sans-serif;
+  --font-body:    'Heebo', system-ui, sans-serif;
+
+  /* ---------- Typography: scale ---------- */
+  --fs-body:        15px;
+  --lh-normal:      1.5;
+
+  /* ---------- Radii ---------- */
+  --r-1:    4px;
+  --r-2:    8px;
+  --r-3:    12px;
+  --r-4:    16px;
+  --r-pill: 9999px;
+
+  /* ---------- Shadows ---------- */
+  --shadow-pop:   0 6px 24px -8px rgba(31, 26, 20, 0.18), 0 1px 0 rgba(31, 26, 20, 0.04);
+  --shadow-modal: 0 24px 60px -20px rgba(31, 26, 20, 0.35), 0 2px 6px rgba(31, 26, 20, 0.08);
+
+  /* ---------- Motion ---------- */
+  --ease:  cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-1: 160ms;
+  --dur-2: 240ms;
+  --dur-3: 400ms;
+
+  /* ---------- Layout ---------- */
+  --maxw: 1180px;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; min-height: 100%; background: var(--paper); }
+
+body.sy {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+#root { min-height: 100%; }
+
+h1, h2, h3, h4 { margin: 0; letter-spacing: -0.01em; }
+button { font-family: var(--font-body); }
+input, textarea, select { font-family: var(--font-body); }
+
+/* tabular numerals for all data */
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* gentle entrance — transform-only so opacity stays 1 */
+@keyframes sy-rise {
+  from { transform: translateY(10px); }
+  to   { transform: translateY(0); }
+}
+.rise { animation: sy-rise var(--dur-2) var(--ease) both; }
+
+/* sparkle particle */
+@keyframes sy-spark {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.4); }
+  18%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1); }
+}
+
+/* counter pop */
+@keyframes sy-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+.pop { animation: sy-pop 520ms var(--ease); }
+
+/* custom range slider (points) */
+input[type="range"].pts {
+  -webkit-appearance: none; appearance: none;
+  height: 6px; border-radius: 999px; outline: none;
+  background: var(--rule); cursor: pointer; width: 100%;
+}
+input[type="range"].pts::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--gold); border: 3px solid var(--card-cream);
+  box-shadow: 0 2px 6px rgba(31, 26, 20, 0.25); cursor: pointer;
+}
+input[type="range"].pts::-moz-range-thumb {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--gold); border: 3px solid var(--card-cream);
+  box-shadow: 0 2px 6px rgba(31, 26, 20, 0.25); cursor: pointer;
+}
+
+/* scrim — instant dim */
+.scrim {
+  position: fixed; inset: 0; background: rgba(31, 26, 20, 0.4);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 60; padding: 20px;
+}
+@keyframes sy-modal-in {
+  from { transform: translateY(14px) scale(0.98); }
+  to   { transform: translateY(0) scale(1); }
+}
+.modal-card { animation: sy-modal-in var(--dur-2) var(--ease); }

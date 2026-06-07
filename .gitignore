@@ -1,0 +1,65 @@
+# Virtual Environment
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+.mypy_cache/
+.ruff_cache/
+
+# Environment variables (Secrets)
+.env
+.env.local
+.env.*.local
+
+# VS Code settings
+.vscode/
+
+# Claude Code (user-specific)
+.claude/settings.json
+
+# JetBrains IDEs
+.idea/
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+dist/
+.cache/
+*.tsbuildinfo
+frontend/coverage/
+
+# Vite
+frontend/dist/
+
+# Project specific
+*.log
+logs/
+
+# Python testing/coverage
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# OS
+Thumbs.db
+
+# GCP / Cloud
+service_account.json
+service-account-key.json
+*.json.key
+gcp-credentials*.json
+gcp/*.json
+gcp/*
+code_review.json
+flow_information/*
+service_account.json
+scripts/*
+google_client_secret.json
