@@ -1,0 +1,19 @@
+{
+  "common.ok": "תקין",
+  "common.success": "הפעולה בוצעה בהצלחה",
+  "common.error": "אירעה שגיאה. נסו שוב מאוחר יותר",
+  "common.not_found": "הפריט המבוקש לא נמצא",
+  "auth.missing_token": "נדרשת התחברות כדי לבצע פעולה זו",
+  "auth.invalid_token": "אסימון ההזדהות אינו תקין או שפג תוקפו",
+  "auth.login_success": "התחברת בהצלחה",
+  "auth.login_failed": "ההתחברות נכשלה",
+  "auth.register_success": "ההרשמה הושלמה בהצלחה",
+  "auth.user_exists": "משתמש עם כתובת דוא\"ל זו כבר קיים במערכת",
+  "auth.invalid_google_token": "אימות מול Google נכשל",
+  "permissions.unauthenticated": "עליך להתחבר כדי לגשת למשאב זה",
+  "permissions.forbidden": "אין לך הרשאה לבצע פעולה זו",
+  "user.role.admin": "מנהל מערכת",
+  "user.role.principal": "מנהל בית ספר",
+  "user.role.teacher": "מורה",
+  "user.role.secretary": "מזכיר/ה"
+}
