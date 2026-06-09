@@ -1,0 +1,28 @@
+# Never copy secrets or local-only files into the image build context.
+.env
+.env.*
+*.env
+
+# Python virtualenvs / caches
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Tests and logs are not needed in the runtime image
+tests/
+*.log
+logs/
+
+# VCS / editor
+.git/
+.gitignore
+.idea/
+.vscode/
+.DS_Store

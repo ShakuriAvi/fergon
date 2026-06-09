@@ -9,10 +9,18 @@ Database: MySQL in Docker (local POC)
 Infrastructure: Docker Compose for local dev
 Coding Conventions
 
+# Git / Version Control (STRICT)
+NEVER COMMIT. Do not run `git commit` (or `git push`, `git merge`, or any history-changing git command) under ANY circumstances — not even when executing a GitHub issue. Leave all changes in the working tree for me to review and commit myself. The only git commands you may run are read-only ones (e.g. `git status`, `git diff`, `git log`). If a workflow step below says to commit, ignore that step.
+
 # Backend (Python / FastAPI)
 View & Service architecture: Routes (views) handle HTTP request/response, auth, and validation only. 
 All business logic lives in services/. Never put DB queries or business logic directly in route handlers — delegate to a service function.
-Use sync endpoints (def). (not async)
+
+SYNCHRONOUS CODE ONLY (STRICT): All backend code must be synchronous. Use plain `def` everywhere — never `async def`, `await`, `asyncio`, or `starlette.concurrency.run_in_threadpool`. This applies to routes/endpoints, services, the DB layer, and all helper functions. Sync endpoints are already run in a threadpool by FastAPI, so blocking work is fine.
+  - The ONLY permitted `async def` is a Starlette middleware `dispatch` method, because the ASGI/Starlette contract requires it. Even there, keep ALL business and DB logic in synchronous helper functions and call them directly (no `await`, no `run_in_threadpool`); `dispatch` may only `await call_next(request)`.
+  - Do not introduce `async` to "fix" a blocking call. If you think you need `async`/`await`/`run_in_threadpool`, you don't — write it sync.
+
+Configuration: `app/core/config.py` exposes a single `Settings` instance as a singleton, built exactly once at app setup via `init_settings()` (called in `create_app`). Access it through `get_settings()`; never construct `Settings()` per request or per call. Use `reset_settings()` only in tests.
 All models inherit from a shared Base declarative base.
 Use Pydantic schemas for request/response validation.
 Environment variables loaded via pydantic-settings or python-dotenv.
@@ -55,8 +63,8 @@ When I describe a new requirement or feature:
 When I say "execute issue #N":
 1. Fetch the issue content from GitHub
 2. Implement it according to the acceptance criteria
-3. Commit with message referencing the issue: `feat: <title> (closes #N)`
-4. Mark the issue as closed via PR or directly
+3. DO NOT commit. Leave all changes in the working tree for me to review and commit myself (see Git / Version Control rule above).
+4. Reply with a summary of what changed and which acceptance criteria are met. Do not close the issue or open a PR unless I explicitly ask.
 
 
 
