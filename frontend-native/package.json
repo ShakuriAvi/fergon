@@ -1,0 +1,62 @@
+{
+  "name": "fergon-native",
+  "private": true,
+  "version": "0.1.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "build:web": "expo export --platform web",
+    "electron:dev": "concurrently -k \"expo start --web --port 8081\" \"wait-on http://localhost:8081 && cross-env ELECTRON_START_URL=http://localhost:8081 electron electron/main.js\"",
+    "electron:start": "electron electron/main.js",
+    "build:desktop": "expo export --platform web --output-dir dist && electron-builder",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~4.0.1",
+    "expo": "~52.0.0",
+    "expo-asset": "~11.0.5",
+    "expo-status-bar": "~2.0.0",
+    "i18next": "^23.11.5",
+    "lucide-react-native": "^0.379.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-i18next": "^14.1.2",
+    "react-native": "0.76.5",
+    "react-native-svg": "15.8.0",
+    "react-native-web": "~0.19.13"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "il.gov.edu.fergon",
+    "productName": "Fergon",
+    "directories": {
+      "output": "desktop-dist"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "extraMetadata": {
+      "main": "electron/main.js"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}

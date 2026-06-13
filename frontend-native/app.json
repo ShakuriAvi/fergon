@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "פירגון",
+    "slug": "fergon",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "fergon",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "il.gov.edu.fergon"
+    },
+    "android": {
+      "package": "il.gov.edu.fergon"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-asset"
+    ]
+  }
+}
