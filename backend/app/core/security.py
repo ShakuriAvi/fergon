@@ -50,5 +50,7 @@ def get_current_user(authorization: str | None = Header(default=None)) -> dict[s
     return {
         "id": int(payload["sub"]),
         "role": payload.get("role"),
+        "access_level": payload.get("access_level"),
+        "organization_id": payload.get("organization_id"),
         "school_id": payload.get("school_id"),
     }

@@ -11,7 +11,7 @@ import time
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
-from app.core.logging import log_action
+from app.core.logging import store_log
 
 logger = logging.getLogger("fergon.request")
 
@@ -24,7 +24,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         except Exception:
             duration_ms = (time.perf_counter() - start) * 1000
             user = getattr(request.state, "user", None) or {}
-            log_action(
+            store_log(
                 "http_request",
                 level=logging.ERROR,
                 user_id=user.get("id"),
@@ -34,13 +34,16 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                 path=request.url.path,
                 status_code=500,
                 duration_ms=round(duration_ms, 2),
+                # The action-log middleware already persists request rows to the
+                # actions_logs table; file-log only here to avoid duplicates.
+                persist_db=False,
             )
             raise
 
         duration_ms = (time.perf_counter() - start) * 1000
         user = getattr(request.state, "user", None) or {}
         level = logging.INFO if response.status_code < 400 else logging.WARNING
-        log_action(
+        store_log(
             "http_request",
             level=level,
             user_id=user.get("id"),
@@ -50,5 +53,8 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             path=request.url.path,
             status_code=response.status_code,
             duration_ms=round(duration_ms, 2),
+            # The action-log middleware already persists request rows to the
+            # actions_logs table; file-log only here to avoid duplicates.
+            persist_db=False,
         )
         return response

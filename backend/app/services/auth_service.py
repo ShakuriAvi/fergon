@@ -14,7 +14,7 @@ import httpx
 from fastapi import HTTPException, status
 
 from app.core.config import get_settings
-from app.core.logging import log_action
+from app.core.logging import store_log
 from app.core.security import create_access_token
 from app.db import users as users_db
 from app.schemas.user import ROLE_VALUES, Role, UserCreate, UserRead
@@ -104,8 +104,13 @@ def login_with_google(code: str) -> dict:
     tokens = exchange_code_for_token(code)
     profile = fetch_google_profile(tokens["access_token"])
     user = _find_or_create_from_profile(profile)
-    token = create_access_token(user_id=user["id"], role=user["role"])
-    log_action(
+    token = create_access_token(
+        user_id=user["id"],
+        role=user["role"],
+        access_level=user.get("access_level"),
+        organization_id=user.get("organization_id"),
+    )
+    store_log(
         "login",
         user_id=user["id"],
         details="google login",
@@ -119,7 +124,7 @@ def register_user(payload: UserCreate) -> dict:
         raise HTTPException(status_code=422, detail="auth.invalid_role")
 
     if users_db.get_user_by_email(payload.email) is not None:
-        log_action(
+        store_log(
             "register",
             level=logging.WARNING,
             details="duplicate registration attempt",
@@ -136,6 +141,11 @@ def register_user(payload: UserCreate) -> dict:
         oauth_id=payload.oauth_id,
     )
     user = users_db.get_user_by_id(user_id)
-    token = create_access_token(user_id=user["id"], role=user["role"])
-    log_action("register", user_id=user["id"], details="user registered")
+    token = create_access_token(
+        user_id=user["id"],
+        role=user["role"],
+        access_level=user.get("access_level"),
+        organization_id=user.get("organization_id"),
+    )
+    store_log("register", user_id=user["id"], details="user registered")
     return {"access_token": token, "user": UserRead(**user)}

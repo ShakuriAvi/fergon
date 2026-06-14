@@ -1,20 +1,17 @@
-"""Tests for the generic actions_logs insert helper (#5)."""
-from __future__ import annotations
+"""Tests for the actions_logs DB layer (#5).
 
-from unittest.mock import MagicMock
+Writes go through the centralized ``get_session`` path (raw SQL, no ORM
+querying), so they run against the SQLite schema created by the ``orm_db``
+fixture and are read back to assert the row landed.
+"""
+from __future__ import annotations
 
 import pytest
 
-from app.db import action_log, connection
+from app.db import action_log
 
 
-def test_insert_action_log_writes_row(monkeypatch):
-    cur = MagicMock()
-    cur.lastrowid = 7
-    conn = MagicMock()
-    conn.cursor.return_value = cur
-    monkeypatch.setattr(connection, "_connect", lambda: conn)
-
+def test_insert_action_log_writes_row(orm_db):
     new_id = action_log.insert_action_log(
         action_name="login",
         user_id=1,
@@ -24,23 +21,31 @@ def test_insert_action_log_writes_row(monkeypatch):
         success=True,
     )
 
-    assert new_id == 7
-    query, params = cur.execute.call_args[0]
-    assert query.startswith("INSERT INTO `actions_logs`")
-    assert "login" in params
+    row = action_log.get_action_log_by_id(new_id)
+    assert row is not None
+    assert row["action_name"] == "login"
+    assert row["user_id"] == 1
+    assert row["http_method"] == "POST"
+    assert row["path"] == "/auth/register"
+    assert row["status_code"] == 201
+    assert row["success"] is True
 
 
-def test_insert_action_log_ignores_unknown_columns(monkeypatch):
-    cur = MagicMock()
-    conn = MagicMock()
-    conn.cursor.return_value = cur
-    monkeypatch.setattr(connection, "_connect", lambda: conn)
+def test_insert_action_log_defaults_http_fields_for_internal_actions(orm_db):
+    # A business action carries no HTTP method/path; NOT NULL columns default.
+    new_id = action_log.insert_action_log(action_name="redeem", user_id=5)
+    row = action_log.get_action_log_by_id(new_id)
+    assert row["http_method"] == "-"
+    assert row["path"] == "-"
 
-    action_log.insert_action_log(
+
+def test_insert_action_log_ignores_unknown_columns(orm_db):
+    new_id = action_log.insert_action_log(
         action_name="x", http_method="GET", path="/", bogus="nope"
     )
-    query, _ = cur.execute.call_args[0]
-    assert "bogus" not in query
+    row = action_log.get_action_log_by_id(new_id)
+    assert row is not None
+    assert "bogus" not in row
 
 
 def test_insert_action_log_requires_action_name():

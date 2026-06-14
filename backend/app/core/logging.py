@@ -73,16 +73,24 @@ def setup_logging() -> None:
     root.addHandler(file_handler)
 
 
-def log_action(
+def store_log(
     action: str,
     *,
     level: int = logging.INFO,
     user_id: Any | None = None,
     school_id: Any | None = None,
     details: Any | None = None,
+    persist_db: bool = True,
     **extra: Any,
 ) -> None:
-    """Emit an action log record in the required structured format."""
+    """Emit an action log record in the required structured format.
+
+    Besides the JSON file/console log, every action is persisted to the
+    ``actions_logs`` table so user actions are auditable in the DB. Set
+    ``persist_db=False`` for callers whose action is already written to the table
+    elsewhere (e.g. the request-logging middleware, which the action-log
+    middleware already records) to avoid duplicate rows.
+    """
     logger = logging.getLogger(_ACTION_LOGGER_NAME)
     logger.log(
         level,
@@ -95,3 +103,49 @@ def log_action(
             **extra,
         },
     )
+    if persist_db:
+        _persist_store_log(
+            action,
+            level=level,
+            user_id=user_id,
+            school_id=school_id,
+            details=details,
+            extra=extra,
+        )
+
+
+def _persist_store_log(
+    action: str,
+    *,
+    level: int,
+    user_id: Any | None,
+    school_id: Any | None,
+    details: Any | None,
+    extra: dict[str, Any],
+) -> None:
+    """Best-effort write of an action to the ``actions_logs`` table.
+
+    A logging failure must never break the business action, so any DB error is
+    swallowed (and itself logged at DEBUG). Imported lazily to avoid a circular
+    import at module load.
+    """
+    try:
+        from app.db.action_log import insert_action_log
+
+        insert_action_log(
+            action_name=action,
+            user_id=user_id,
+            school_id=school_id,
+            details=None if details is None else str(details),
+            success=level < logging.WARNING,
+            http_method=extra.get("method"),
+            path=extra.get("path"),
+            status_code=extra.get("status_code"),
+            duration_ms=extra.get("duration_ms"),
+            page=extra.get("page"),
+            payload=extra.get("payload"),
+        )
+    except Exception:  # pragma: no cover - audit write must never raise
+        logging.getLogger(_ACTION_LOGGER_NAME).debug(
+            "failed to persist action log to db", exc_info=True
+        )

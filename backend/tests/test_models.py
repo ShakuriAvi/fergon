@@ -1,4 +1,4 @@
-"""Tests for the ORM models (#11)."""
+"""Tests for the ORM models (#11, extended #12-#24)."""
 from __future__ import annotations
 
 from app.models import ActionLog, Base, User
@@ -11,8 +11,12 @@ def test_user_table_mapping():
         "id",
         "email",
         "full_name",
-        "role",
+        "role_id",
+        "organization_id",
         "oauth_id",
+        "points_balance",
+        "phone",
+        "avatar_emoji",
         "is_active",
         "created_at",
         "updated_at",
@@ -43,5 +47,36 @@ def test_action_log_table_mapping():
 
 
 def test_models_registered_on_shared_base():
-    """Both models share one Base.metadata (used by Alembic autogenerate)."""
-    assert {"users", "actions_logs"} <= set(Base.metadata.tables.keys())
+    """All models share one Base.metadata (used by Alembic autogenerate)."""
+    assert {
+        "users",
+        "actions_logs",
+        "organizations",
+        "roles",
+        "recognition_values",
+        "posts",
+        "rewards",
+        "redemptions",
+        "organization_recognition_values",
+        "organization_role_allowances",
+        "allowance_periods",
+    } <= set(Base.metadata.tables.keys())
+
+
+def test_timestamp_columns_present_on_every_domain_table():
+    """Per project requirement, every domain table carries created_at/updated_at."""
+    domain_tables = [
+        "users",
+        "organizations",
+        "roles",
+        "recognition_values",
+        "posts",
+        "rewards",
+        "redemptions",
+        "organization_recognition_values",
+        "organization_role_allowances",
+        "allowance_periods",
+    ]
+    for name in domain_tables:
+        cols = set(Base.metadata.tables[name].columns.keys())
+        assert {"created_at", "updated_at"} <= cols, name

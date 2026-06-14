@@ -20,9 +20,10 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from app.core.config import get_settings
-from app.core.logging import log_action
+from app.core.logging import store_log
 from app.core.security import get_current_user
 from app.db import users as users_db
+from app.schemas.role import AccessLevel
 from app.schemas.user import Role
 from app.translations.translator import t
 
@@ -62,7 +63,7 @@ class PermissionsMiddleware(BaseHTTPMiddleware):
 
         authorization = request.headers.get("authorization")
         if not authorization or not authorization.lower().startswith("bearer "):
-            log_action(
+            store_log(
                 "permission_denied",
                 level=logging.WARNING,
                 details=f"unauthenticated access to {path}",
@@ -80,7 +81,7 @@ class PermissionsMiddleware(BaseHTTPMiddleware):
                 token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
             )
         except jwt.PyJWTError:
-            log_action(
+            store_log(
                 "permission_denied",
                 level=logging.WARNING,
                 details=f"invalid token for {path}",
@@ -97,7 +98,7 @@ class PermissionsMiddleware(BaseHTTPMiddleware):
         user_id = int(payload["sub"])
         db_user = users_db.get_user_by_id(user_id)
         if db_user is None or not db_user.get("is_active", False):
-            log_action(
+            store_log(
                 "permission_denied",
                 level=logging.WARNING,
                 user_id=user_id,
@@ -111,7 +112,9 @@ class PermissionsMiddleware(BaseHTTPMiddleware):
 
         request.state.user = {
             "id": user_id,
-            "role": payload.get("role"),
+            "role": db_user.get("role") or payload.get("role"),
+            "access_level": db_user.get("access_level") or payload.get("access_level"),
+            "organization_id": db_user.get("organization_id"),
             "school_id": payload.get("school_id"),
         }
         return await call_next(request)
@@ -123,11 +126,37 @@ def require_roles(*roles: Role | str) -> Callable:
 
     def checker(user: dict = Depends(get_current_user)) -> dict:
         if user.get("role") not in allowed:
-            log_action(
+            store_log(
                 "permission_denied",
                 level=logging.WARNING,
                 user_id=user.get("id"),
                 details=f"role {user.get('role')} not in {sorted(allowed)}",
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=t("permissions.forbidden"),
+            )
+        return user
+
+    return checker
+
+
+def require_access_level(*levels: AccessLevel | str) -> Callable:
+    """Dependency factory enforcing the current user's role ``access_level``.
+
+    Complements ``require_roles`` for the data-driven roles table (#20): instead
+    of naming specific roles, an endpoint can require an access tier
+    (``admin`` / ``manager`` / ``member``).
+    """
+    allowed = {a.value if isinstance(a, AccessLevel) else a for a in levels}
+
+    def checker(user: dict = Depends(get_current_user)) -> dict:
+        if user.get("access_level") not in allowed:
+            store_log(
+                "permission_denied",
+                level=logging.WARNING,
+                user_id=user.get("id"),
+                details=f"access_level {user.get('access_level')} not in {sorted(allowed)}",
             )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

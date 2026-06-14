@@ -15,5 +15,14 @@
   "user.role.admin": "מנהל מערכת",
   "user.role.principal": "מנהל בית ספר",
   "user.role.teacher": "מורה",
-  "user.role.secretary": "מזכיר/ה"
+  "user.role.secretary": "מזכיר/ה",
+  "user.role.student": "תלמיד/ה",
+  "user.role.server": "עובד/ת",
+  "posts.self_recognition": "לא ניתן להעניק הכרה לעצמך",
+  "posts.invalid_value": "אחד הערכים שנבחרו אינו זמין בארגון זה",
+  "posts.invalid_recipient": "מקבל ההכרה אינו קיים או אינו שייך לארגון שלך",
+  "posts.insufficient_allowance": "אין לך מספיק נקודות מכסה חודשית להענקה זו",
+  "redemption.not_found": "המשתמש או ההטבה לא נמצאו",
+  "redemption.insufficient": "אין לך מספיק נקודות למימוש הטבה זו",
+  "allowance.reset_done": "מכסות החודש אופסו בהצלחה"
 }

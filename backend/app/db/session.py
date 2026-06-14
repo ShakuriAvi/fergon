@@ -11,11 +11,12 @@ success, rolls back on error, and always closes. Everything here is synchronous
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Iterator
+from typing import Any, Iterator, Mapping, cast
 
 from sqlalchemy import create_engine
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import CursorResult, Engine
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.sql.elements import Executable
 
 from app.core.config import get_settings
 
@@ -59,6 +60,21 @@ def get_session() -> Iterator[Session]:
         raise
     finally:
         session.close()
+
+
+def execute_insert(
+    session: Session,
+    statement: Executable,
+    params: Mapping[str, Any] | None = None,
+) -> int:
+    """Run an INSERT and return the new row's autoincrement id.
+
+    ``Session.execute`` is typed to return a generic ``Result``; for a Core
+    INSERT it is really a ``CursorResult`` (the only result type that exposes
+    ``lastrowid``), so we cast to read it without a type-checker warning.
+    """
+    result = cast(CursorResult, session.execute(statement, params or {}))
+    return result.lastrowid
 
 
 def reset_engine() -> None:
