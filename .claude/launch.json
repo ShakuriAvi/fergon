@@ -2,12 +2,6 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "fergon-native-web",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "frontend-native", "run", "web"],
-      "port": 8081
-    },
-    {
       "name": "fergon-original-vite",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "frontend", "run", "dev"],

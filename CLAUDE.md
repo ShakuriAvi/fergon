@@ -47,8 +47,7 @@ the repeated string literals used in that folder — i18n translation *keys* (th
 key only; the Hebrew copy stays in `locales/he.json`), view/route identifiers,
 API resource names/paths, HTTP verbs, header names, and storage/cookie keys.
 Import these constants instead of retyping the literal. App-wide constants live
-in `src/constants.js`. This applies to BOTH `frontend/` (web) and
-`frontend-native/` (native). Tailwind/StyleSheet class strings are the only
+in `src/constants.js`. This applies to BOTH `frontend/` (web). Tailwind/StyleSheet class strings are the only
 exception — they are presentation tokens and stay inline. A guard test
 (`src/constants.test.js` web / `src/lib/constants.guard.test.js` native) fails
 if a centralized literal reappears raw in source; keep it green.

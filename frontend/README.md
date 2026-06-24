@@ -37,8 +37,3 @@ src/data/              static/mock data
 src/styles/            Tailwind + global styles
 src/test/              Vitest setup and tests
 ```
-
-## Related
-
-For the React Native / Expo build of the same app (web, native iOS/Android, and Electron
-desktop), see [`../frontend-native`](../frontend-native/README.md).
