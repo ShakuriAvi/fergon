@@ -2,18 +2,18 @@
    Desktop: sidebar + topbar. Mobile: topbar + bottom tabs with center FAB. */
 import { View, Text, Pressable, TextInput, ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { VIEW, GIVE_TAB, I18N } from './constants';
 import { Icon, Avatar, Button } from './ui';
 import { Logo } from './Logo';
 import { useViewport } from '../hooks/useViewport';
-import { getUser, ME, schoolById } from '../data/mock';
+import { useMe } from '../context/CurrentUser';
 import { colors, radius, fontFamily, shadowPop } from '../theme';
 
 const NAV = [
-  { id: 'feed', icon: 'layout-list' },
-  { id: 'profile', icon: 'wallet' },
-  { id: 'rewards', icon: 'gift' },
-  { id: 'principal', icon: 'bar-chart-3' },
-  { id: 'admin', icon: 'shield-check' },
+  { id: VIEW.FEED, icon: 'layout-list' },
+  { id: VIEW.PROFILE, icon: 'wallet' },
+  { id: VIEW.REWARDS, icon: 'gift' },
+  { id: VIEW.PRINCIPAL, icon: 'bar-chart-3' },
 ];
 
 function NavItem({ it, active, onPress }) {
@@ -43,7 +43,8 @@ function NavItem({ it, active, onPress }) {
 
 function Sidebar({ active, onNavigate, onGive }) {
   const { t } = useTranslation();
-  const me = getUser(ME);
+  const { user, logout } = useMe();
+  const name = user?.full_name || '';
   return (
     <View style={{ width: 248, borderLeftWidth: 1, borderColor: colors.rule, backgroundColor: colors.cardCream, padding: 18 }}>
       <View style={{ paddingHorizontal: 8, paddingTop: 6, paddingBottom: 16 }}>
@@ -51,7 +52,7 @@ function Sidebar({ active, onNavigate, onGive }) {
       </View>
 
       <Button variant="primary" icon="sparkles" onPress={onGive} style={{ marginBottom: 10 }}>
-        {t('common.give')}
+        {t(I18N.COMMON_GIVE)}
       </Button>
 
       <Text style={{ fontFamily, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 6, fontSize: 11, fontWeight: '700', letterSpacing: 0.8, color: colors.ink3 }}>
@@ -61,24 +62,24 @@ function Sidebar({ active, onNavigate, onGive }) {
         <NavItem key={it.id} it={it} active={active} onPress={() => onNavigate(it.id)} />
       ))}
 
-      <Pressable
-        onPress={() => onNavigate('profile')}
-        style={{ marginTop: 'auto', flexDirection: 'row', alignItems: 'center', gap: 10, borderTopWidth: 1, borderColor: colors.rule, paddingTop: 12 }}
-      >
-        <Avatar name={me.name} size={36} />
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text numberOfLines={1} style={{ fontFamily, fontSize: 13.5, fontWeight: '700', color: colors.ink }}>{me.name}</Text>
-          <Text style={{ fontFamily, fontSize: 11.5, color: colors.ink3 }}>{schoolById(me.school).short}</Text>
-        </View>
-        <Icon name="chevron-left" size={15} color={colors.ink3} />
-      </Pressable>
+      <View style={{ marginTop: 'auto', flexDirection: 'row', alignItems: 'center', gap: 10, borderTopWidth: 1, borderColor: colors.rule, paddingTop: 12 }}>
+        <Avatar name={name} size={36} />
+        <Pressable style={{ flex: 1, minWidth: 0 }} onPress={() => onNavigate(VIEW.PROFILE)}>
+          <Text numberOfLines={1} style={{ fontFamily, fontSize: 13.5, fontWeight: '700', color: colors.ink }}>{name}</Text>
+          <Text style={{ fontFamily, fontSize: 11.5, color: colors.ink3 }}>{user?.role || ''}</Text>
+        </Pressable>
+        <Pressable onPress={logout} accessibilityLabel={t('nav.logout')}>
+          <Icon name="log-out" size={16} color={colors.ink3} />
+        </Pressable>
+      </View>
     </View>
   );
 }
 
 function Topbar({ isMobile, onNavigate, points }) {
   const { t } = useTranslation();
-  const me = getUser(ME);
+  const { user } = useMe();
+  const name = user?.full_name || '';
   return (
     <View
       style={{
@@ -119,15 +120,15 @@ function Topbar({ isMobile, onNavigate, points }) {
       )}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: isMobile ? 10 : 16 }}>
         <Pressable
-          onPress={() => onNavigate('profile')}
+          onPress={() => onNavigate(VIEW.PROFILE)}
           style={{ flexDirection: 'row', alignItems: 'center', gap: 7, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.gold100, backgroundColor: colors.gold50, paddingHorizontal: 12, paddingVertical: 6 }}
         >
           <Text style={{ fontSize: 15, color: colors.gold }}>★</Text>
           <Text style={{ fontFamily, fontSize: 14.5, fontWeight: '800', color: colors.goldDeep }}>{points}</Text>
-          {!isMobile ? <Text style={{ fontFamily, fontSize: 12.5, fontWeight: '600', color: colors.goldDeep }}>{t('common.points')}</Text> : null}
+          {!isMobile ? <Text style={{ fontFamily, fontSize: 12.5, fontWeight: '600', color: colors.goldDeep }}>{t(I18N.COMMON_POINTS)}</Text> : null}
         </Pressable>
         {isMobile ? null : <Icon name="bell" size={20} color={colors.ink2} />}
-        {isMobile ? null : <Avatar name={me.name} size={36} />}
+        {isMobile ? null : <Avatar name={name} size={36} />}
       </View>
     </View>
   );
@@ -136,11 +137,11 @@ function Topbar({ isMobile, onNavigate, points }) {
 function BottomTabs({ active, onNavigate, onGive }) {
   const { t } = useTranslation();
   const items = [
-    { id: 'feed', icon: 'layout-list' },
-    { id: 'rewards', icon: 'gift' },
-    { id: '__give', icon: 'sparkles' },
-    { id: 'profile', icon: 'wallet' },
-    { id: 'principal', icon: 'bar-chart-3' },
+    { id: VIEW.FEED, icon: 'layout-list' },
+    { id: VIEW.REWARDS, icon: 'gift' },
+    { id: GIVE_TAB, icon: 'sparkles' },
+    { id: VIEW.PROFILE, icon: 'wallet' },
+    { id: VIEW.PRINCIPAL, icon: 'bar-chart-3' },
   ];
   return (
     <View
@@ -155,7 +156,7 @@ function BottomTabs({ active, onNavigate, onGive }) {
       }}
     >
       {items.map((it) => {
-        if (it.id === '__give') {
+        if (it.id === GIVE_TAB) {
           return (
             <Pressable
               key="give"

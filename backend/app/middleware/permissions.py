@@ -19,6 +19,13 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+from app.core.auth_cookies import (
+    ACCESS_COOKIE,
+    CSRF_COOKIE,
+    CSRF_HEADER,
+    UNSAFE_METHODS,
+    csrf_token_valid,
+)
 from app.core.config import get_settings
 from app.core.logging import store_log
 from app.core.security import get_current_user
@@ -35,6 +42,7 @@ PUBLIC_PATHS: set[str] = {
     "/auth/google/login",
     "/auth/google/callback",
     "/auth/register",
+    "/auth/dev-login",  # TEMPORARY (#39): dev-only email login
     "/docs",
     "/redoc",
     "/openapi.json",
@@ -61,8 +69,19 @@ class PermissionsMiddleware(BaseHTTPMiddleware):
         if _is_public(path):
             return await call_next(request)
 
+        # Two transports carry the JWT: the ``Authorization: Bearer`` header
+        # (native/mobile) or the HttpOnly ``access_token`` cookie (web SPA). The
+        # header takes precedence so an explicit Bearer call is never overridden
+        # by a stale cookie.
         authorization = request.headers.get("authorization")
-        if not authorization or not authorization.lower().startswith("bearer "):
+        if authorization and authorization.lower().startswith("bearer "):
+            token = authorization.split(" ", 1)[1].strip()
+            via_cookie = False
+        else:
+            token = request.cookies.get(ACCESS_COOKIE)
+            via_cookie = bool(token)
+
+        if not token:
             store_log(
                 "permission_denied",
                 level=logging.WARNING,
@@ -74,8 +93,27 @@ class PermissionsMiddleware(BaseHTTPMiddleware):
                 content={"detail": t("permissions.unauthenticated")},
             )
 
+        # CSRF: cookie auth is ambient, so a cross-site page could trigger a
+        # state-changing request with the user's cookie attached. Require the
+        # double-submit token on unsafe methods. Header (Bearer) auth is immune
+        # (a browser cannot set a custom header cross-site) so it is exempt.
+        if via_cookie and request.method in UNSAFE_METHODS:
+            if not csrf_token_valid(
+                cookie_value=request.cookies.get(CSRF_COOKIE),
+                header_value=request.headers.get(CSRF_HEADER),
+            ):
+                store_log(
+                    "permission_denied",
+                    level=logging.WARNING,
+                    details=f"missing/invalid CSRF token for {path}",
+                    path=path,
+                )
+                return JSONResponse(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    content={"detail": t("permissions.csrf")},
+                )
+
         settings = get_settings()
-        token = authorization.split(" ", 1)[1].strip()
         try:
             payload = jwt.decode(
                 token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]

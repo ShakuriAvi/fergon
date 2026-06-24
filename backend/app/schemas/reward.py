@@ -32,6 +32,19 @@ class RewardCreate(BaseModel):
     in_stock: bool = True
 
 
+class RewardUpdate(BaseModel):
+    """Payload to update a reward."""
+
+    provider: str = Field(min_length=1, max_length=255)
+    title: str = Field(min_length=1, max_length=255)
+    category: RewardCategory
+    cost: int = Field(ge=0)
+    emoji: str | None = Field(default=None, max_length=16)
+    color: str | None = Field(default=None, max_length=32)
+    blurb: str | None = None
+    in_stock: bool = True
+
+
 class RewardRead(BaseModel):
     """Reward representation returned to the frontend."""
 
@@ -44,5 +57,6 @@ class RewardRead(BaseModel):
     color: str | None = None
     blurb: str | None = None
     in_stock: bool = True
+    is_active: bool = True
     created_at: datetime | None = None
     updated_at: datetime | None = None

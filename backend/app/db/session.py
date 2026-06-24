@@ -50,7 +50,8 @@ def get_engine() -> Engine:
 def get_session() -> Iterator[Session]:
     """Yield an ORM session, committing on success and rolling back on error."""
     init_engine()
-    assert _SessionLocal is not None  # set by init_engine
+    if _SessionLocal is None:  # set by init_engine; guard survives python -O
+        raise RuntimeError("session factory not initialized")
     session = _SessionLocal()
     try:
         yield session

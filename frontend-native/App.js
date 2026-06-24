@@ -1,19 +1,23 @@
-/* App root — RN port of frontend/src/App.jsx. State-based routing:
-   auth gate → Shell + active view, with the give modal overlay. */
-import { useState, useEffect } from 'react';
-import { SafeAreaView, Platform, StatusBar as RNStatusBar } from 'react-native';
+/* App root (#44). Email dev-login → backend-driven consumer app. The admin tool
+   is web-only (/admin at localhost:5173), so there is no admin screen here. */
+import { useEffect, useReducer, useState } from 'react';
+import { SafeAreaView, Platform, StatusBar as RNStatusBar, View, Text } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { useTranslation } from 'react-i18next';
 import './src/i18n';
-import LoginView from './src/components/LoginView';
+import DevLoginView from './src/components/DevLoginView';
 import Shell from './src/components/Shell';
 import FeedView from './src/components/FeedView';
 import ProfileView from './src/components/ProfileView';
 import RewardsView from './src/components/RewardsView';
 import PrincipalView from './src/components/PrincipalView';
-import AdminView from './src/components/AdminView';
 import GiveModal from './src/components/GiveModal';
-import { getUser, ME } from './src/data/mock';
-import { colors } from './src/theme';
+import { colors, fontFamily } from './src/theme';
+import { CurrentUserProvider, useMe } from './src/context/CurrentUser';
+import { getSession, setSession } from './src/lib/auth';
+import { VIEW } from './src/constants';
+import { I18N } from './src/components/constants';
+import { api } from './src/lib/api';
 
 /* web: load Heebo + base body styles so the canvas matches the Vite build */
 function useWebChrome() {
@@ -38,28 +42,15 @@ function useWebChrome() {
 
 export default function App() {
   useWebChrome();
-  const me = getUser(ME);
-  const [authed, setAuthed] = useState(false);
-  const [view, setView] = useState('feed');
-  const [giveOpen, setGiveOpen] = useState(false);
-  const [allowanceLeft, setAllowanceLeft] = useState(me.allowance - me.given);
-  const [points, setPoints] = useState(me.points);
-
-  const go = (v) => setView(v);
-  const openGive = () => setGiveOpen(true);
-  const onSent = (data) => {
-    setGiveOpen(false);
-    setAllowanceLeft((a) => Math.max(0, a - data.points));
-  };
-  const onRedeem = (reward) => setPoints((p) => Math.max(0, p - reward.cost));
-
+  const [version, bump] = useReducer((x) => x + 1, 0);
   const topInset = Platform.OS === 'android' ? RNStatusBar.currentHeight : 0;
+  const token = getSession()?.token;
 
-  if (!authed) {
+  if (!token) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.paper, paddingTop: topInset }}>
         <StatusBar style="dark" />
-        <LoginView onLogin={() => { setAuthed(true); setView('feed'); }} />
+        <DevLoginView onSuccess={bump} />
       </SafeAreaView>
     );
   }
@@ -67,14 +58,46 @@ export default function App() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.paper, paddingTop: topInset }}>
       <StatusBar style="dark" />
-      <Shell active={view} onNavigate={go} onGive={openGive} points={points}>
-        {view === 'feed' ? <FeedView onGive={openGive} points={points} allowanceLeft={allowanceLeft} /> : null}
-        {view === 'profile' ? <ProfileView onGive={openGive} points={points} allowanceLeft={allowanceLeft} /> : null}
-        {view === 'rewards' ? <RewardsView points={points} onRedeem={onRedeem} /> : null}
-        {view === 'principal' ? <PrincipalView /> : null}
-        {view === 'admin' ? <AdminView /> : null}
-      </Shell>
-      <GiveModal open={giveOpen} onClose={() => setGiveOpen(false)} onSent={onSent} allowanceLeft={allowanceLeft} />
+      <CurrentUserProvider key={version} onLogout={bump}>
+        <ConsumerShell />
+      </CurrentUserProvider>
     </SafeAreaView>
+  );
+}
+
+function ConsumerShell() {
+  const { t } = useTranslation();
+  const { user, loading } = useMe();
+  const [view, setView] = useState(VIEW.FEED);
+  const [giveOpen, setGiveOpen] = useState(false);
+  const [wallet, setWallet] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const loadWallet = () => api.wallet().then(setWallet).catch(() => setWallet(null));
+  useEffect(() => { loadWallet(); }, [user?.id]);
+
+  const refresh = () => { loadWallet(); setRefreshKey((k) => k + 1); };
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ fontFamily, color: colors.ink3 }}>{t(I18N.COMMON_LOADING)}</Text>
+      </View>
+    );
+  }
+
+  const points = wallet?.points_balance ?? 0;
+  const allowanceLeft = wallet?.allowance_remaining ?? 0;
+
+  return (
+    <>
+      <Shell active={view} onNavigate={setView} onGive={() => setGiveOpen(true)} points={points}>
+        {view === VIEW.FEED ? <FeedView onGive={() => setGiveOpen(true)} points={points} allowanceLeft={allowanceLeft} refreshKey={refreshKey} /> : null}
+        {view === VIEW.PROFILE ? <ProfileView onGive={() => setGiveOpen(true)} points={points} allowanceLeft={allowanceLeft} refreshKey={refreshKey} /> : null}
+        {view === VIEW.REWARDS ? <RewardsView points={points} onRedeemed={refresh} refreshKey={refreshKey} /> : null}
+        {view === VIEW.PRINCIPAL ? <PrincipalView refreshKey={refreshKey} /> : null}
+      </Shell>
+      <GiveModal open={giveOpen} onClose={() => setGiveOpen(false)} onSent={() => { setGiveOpen(false); refresh(); }} allowanceLeft={allowanceLeft} />
+    </>
   );
 }

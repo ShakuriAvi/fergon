@@ -42,6 +42,15 @@ def redeem(*, user_id: int, reward_id: int) -> dict[str, Any]:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=t("redemption.not_found"),
             )
+        # A reward listed for redemption can still be soft-deleted
+        # (``is_active = 0``) or temporarily out of stock (``in_stock = 0``).
+        # The list endpoint hides those, but a client can POST any reward id
+        # directly, so re-check availability here before debiting points.
+        if not reward["is_active"] or not reward["in_stock"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=t("redemption.unavailable"),
+            )
         cost = reward["cost"]
         if user["points_balance"] < cost:
             # Log + raise after the session closes so the audit write (which

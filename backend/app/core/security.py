@@ -5,8 +5,10 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import jwt
-from fastapi import Header, HTTPException, status
+from fastapi import HTTPException, status
+from starlette.requests import Request
 
+from app.core.auth_cookies import ACCESS_COOKIE
 from app.core.config import get_settings
 
 
@@ -38,14 +40,31 @@ def decode_token(token: str) -> dict[str, Any]:
         ) from exc
 
 
-def get_current_user(authorization: str | None = Header(default=None)) -> dict[str, Any]:
-    """FastAPI dependency that resolves the current user from the Bearer token."""
-    if not authorization or not authorization.lower().startswith("bearer "):
+def get_current_user(request: Request) -> dict[str, Any]:
+    """FastAPI dependency resolving the current user.
+
+    In the running app ``PermissionsMiddleware`` has already authenticated the
+    request (validating the token *and* that the account is still active) and
+    attached the user to ``request.state.user`` — prefer that. As a fallback
+    (e.g. unit tests that mount a router without the middleware) resolve the JWT
+    directly from the ``Authorization: Bearer`` header or the ``access_token``
+    cookie, so both transports work everywhere.
+    """
+    state_user = getattr(request.state, "user", None)
+    if state_user:
+        return state_user
+
+    authorization = request.headers.get("authorization")
+    if authorization and authorization.lower().startswith("bearer "):
+        token = authorization.split(" ", 1)[1].strip()
+    else:
+        token = request.cookies.get(ACCESS_COOKIE)
+
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="auth.missing_token",
         )
-    token = authorization.split(" ", 1)[1].strip()
     payload = decode_token(token)
     return {
         "id": int(payload["sub"]),

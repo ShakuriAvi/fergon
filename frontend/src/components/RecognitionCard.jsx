@@ -1,18 +1,20 @@
-/* Recognition feed item — ported from fergon.html. Used in Feed + Profile. */
+/* Recognition feed item (#43). Renders an enriched backend feed item:
+   { id, from_name, to_name, points, message, values: [{key,emoji,tone}], created_at }. */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon, Avatar, Sparkles, FEED_AVATAR_TONE as AV } from './primitives.jsx';
-import { getUser, valueById, schoolById } from '../data/mock.js';
 import { timeAgo } from '../lib/format.js';
 
-export default function RecognitionCard({ r, first }) {
+export default function RecognitionCard({ item, first }) {
   const { t } = useTranslation();
-  const from = getUser(r.from);
-  const to = getUser(r.to);
-  const val = valueById(r.value);
-  const [claps, setClaps] = useState(r.claps);
+  const val = item.values && item.values[0];
+  const [claps, setClaps] = useState(0);
   const [clapped, setClapped] = useState(false);
   const [burst, setBurst] = useState(false);
+
+  const mins = item.created_at
+    ? Math.max(0, Math.floor((Date.now() - Date.parse(item.created_at)) / 60000))
+    : 0;
 
   const clap = () => {
     const next = !clapped;
@@ -26,33 +28,32 @@ export default function RecognitionCard({ r, first }) {
 
   return (
     <article className={first ? 'px-[4px] py-[24px]' : 'border-t border-rule px-[4px] py-[24px]'}>
-      {/* who → whom */}
       <header className="mb-[14px] flex items-center gap-[12px]">
-        <Avatar name={from.name} size={44} tone={AV} />
+        <Avatar name={item.from_name} size={44} tone={AV} />
         <div className="min-w-0 flex-1 leading-[1.35]">
           <div className="text-[15.5px] text-ink">
-            <span className="font-bold">{from.name}</span>
+            <span className="font-bold">{item.from_name}</span>
             <span className="mx-[5px] text-ink-3">{t('feed.recognized')}</span>
-            <span className="font-bold">{to.name}</span>
+            <span className="font-bold">{item.to_name}</span>
           </div>
-          <div className="mt-[2px] text-[12.5px] text-ink-3">
-            {timeAgo(r.mins, t)} · {schoolById(to.school).short}
-          </div>
+          <div className="mt-[2px] text-[12.5px] text-ink-3">{timeAgo(mins, t)}</div>
         </div>
         <span className="tnum inline-flex shrink-0 items-center gap-[5px] text-[16px] font-extrabold text-gold-deep">
-          <span className="text-[16px] text-gold">★</span>+{r.points}
+          <span className="text-[16px] text-gold">★</span>+{item.points}
         </span>
       </header>
 
-      {/* message */}
-      <p className="m-0 ps-[56px] text-[16.5px] leading-[1.66] text-ink [text-wrap:pretty]">{r.msg}</p>
+      {item.message ? (
+        <p className="m-0 ps-[56px] text-[16.5px] leading-[1.66] text-ink [text-wrap:pretty]">{item.message}</p>
+      ) : null}
 
-      {/* footer */}
       <div className="mt-[16px] flex items-center gap-[14px] ps-[56px]">
-        <span className="inline-flex items-center gap-[6px] whitespace-nowrap text-[13px] font-semibold text-ink-2">
-          <span className="text-[15px]">{val.emoji}</span>
-          {t(`values.${val.id}`)}
-        </span>
+        {val ? (
+          <span className="inline-flex items-center gap-[6px] whitespace-nowrap text-[13px] font-semibold text-ink-2">
+            <span className="text-[15px]">{val.emoji}</span>
+            {val.key}
+          </span>
+        ) : null}
         <button
           type="button"
           onClick={clap}

@@ -5,7 +5,7 @@ receives per month. Source for the monthly grant in ``allowance_periods`` (#24).
 """
 from __future__ import annotations
 
-from sqlalchemy import ForeignKey, Integer, UniqueConstraint
+from sqlalchemy import Boolean, ForeignKey, Integer, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, TimestampMixin
@@ -27,6 +27,9 @@ class OrganizationRoleAllowance(TimestampMixin, Base):
         ForeignKey("roles.id"), nullable=False, index=True
     )
     monthly_points: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("1")
+    )
 
     def __repr__(self) -> str:  # pragma: no cover - debug helper
         return (

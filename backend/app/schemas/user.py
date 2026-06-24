@@ -30,6 +30,27 @@ class UserCreate(BaseModel):
     oauth_id: str | None = None
 
 
+class UserAdminCreate(BaseModel):
+    """Admin payload to create a user (role assigned via ``role_id``)."""
+
+    email: EmailStr
+    full_name: str = Field(min_length=1, max_length=255)
+    role_id: int | None = None
+    organization_id: int | None = None
+    phone: str | None = Field(default=None, max_length=32)
+    avatar_emoji: str | None = Field(default=None, max_length=16)
+
+
+class UserAdminUpdate(BaseModel):
+    """Admin payload to update a user's profile / role / organization."""
+
+    full_name: str = Field(min_length=1, max_length=255)
+    role_id: int | None = None
+    organization_id: int | None = None
+    phone: str | None = Field(default=None, max_length=32)
+    avatar_emoji: str | None = Field(default=None, max_length=16)
+
+
 class UserRead(BaseModel):
     """User representation returned to the frontend.
 
@@ -42,6 +63,7 @@ class UserRead(BaseModel):
     email: EmailStr
     full_name: str
     role: str | None = None
+    access_level: str | None = None
     role_id: int | None = None
     organization_id: int | None = None
     points_balance: int = 0

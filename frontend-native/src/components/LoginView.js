@@ -2,6 +2,7 @@
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import Svg, { Rect, Path } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
+import { I18N } from './constants';
 import { Icon, Txt } from './ui';
 import { useViewport } from '../hooks/useViewport';
 import { colors, radius, fontFamily } from '../theme';
@@ -22,7 +23,7 @@ function GoogleMark() {
 export default function LoginView({ onLogin }) {
   const { t } = useTranslation();
   const { isMobile } = useViewport();
-  const brand = t('app.brand');
+  const brand = t(I18N.APP_BRAND);
 
   return (
     <ScrollView
@@ -62,7 +63,7 @@ export default function LoginView({ onLogin }) {
 
         {/* Google SSO */}
         <Pressable
-          onPress={onLogin}
+          onPress={() => onLogin('admin')}
           style={({ pressed }) => ({
             flexDirection: 'row',
             alignItems: 'center',
@@ -86,7 +87,7 @@ export default function LoginView({ onLogin }) {
           <Txt style={{ fontSize: 12.5, color: colors.ink3 }}>{t('login.secured')}</Txt>
         </View>
 
-        <Pressable onPress={onLogin} style={{ marginTop: 16 }}>
+        <Pressable onPress={() => onLogin('member')} style={{ marginTop: 16 }}>
           <Text style={{ fontFamily, fontSize: 14, fontWeight: '600', color: colors.ink2, textDecorationLine: 'underline' }}>
             {t('login.guest')}
           </Text>

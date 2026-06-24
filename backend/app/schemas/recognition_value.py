@@ -14,6 +14,14 @@ class RecognitionValueCreate(BaseModel):
     tone: str | None = None
 
 
+class RecognitionValueUpdate(BaseModel):
+    """Payload to update a recognition value."""
+
+    key: str = Field(min_length=1, max_length=120)
+    emoji: str | None = Field(default=None, max_length=16)
+    tone: str | None = Field(default=None, max_length=32)
+
+
 class RecognitionValueRead(BaseModel):
     """Recognition value representation returned to the frontend."""
 

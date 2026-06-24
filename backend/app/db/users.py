@@ -9,8 +9,9 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from sqlalchemy import text
+from sqlalchemy import bindparam, text
 
+from app.db._filters import build_list_sql
 from app.db.queries import roles as roles_q
 from app.db.queries import users as q
 from app.db.session import execute_insert, get_session
@@ -97,4 +98,131 @@ def create_user(
                 "organization_id": organization_id,
                 "oauth_id": oauth_id,
             },
+        )
+
+
+def list_users_page(
+    *,
+    q_text: str | None = None,
+    organization_id: int | None = None,
+    role_id: int | None = None,
+    include_inactive: bool = False,
+    limit: int = 50,
+    offset: int = 0,
+) -> tuple[list[dict[str, Any]], int]:
+    """Return a page of users (joined to roles) matching the filters + total."""
+    extra_where: list[str] = []
+    extra_params: dict[str, Any] = {}
+    if organization_id is not None:
+        extra_where.append("u.organization_id = :organization_id")
+        extra_params["organization_id"] = organization_id
+    if role_id is not None:
+        extra_where.append("u.role_id = :role_id")
+        extra_params["role_id"] = role_id
+    list_sql, count_sql, count_params, list_params = build_list_sql(
+        columns=q._COLUMNS,
+        from_clause="users u LEFT JOIN roles r ON r.id = u.role_id",
+        order_by="u.full_name",
+        search_columns=q.SEARCH_COLUMNS,
+        q=q_text,
+        include_inactive=include_inactive,
+        active_column="u.is_active",
+        limit=limit,
+        offset=offset,
+        extra_where=extra_where,
+        extra_params=extra_params,
+    )
+    with get_session() as session:
+        rows = session.execute(text(list_sql), list_params).mappings().all()
+        total = session.execute(text(count_sql), count_params).scalar_one()
+        return [_to_dict(r) for r in rows], int(total)
+
+
+def create_user_admin(
+    *,
+    email: str,
+    full_name: str,
+    role_id: int | None = None,
+    organization_id: int | None = None,
+    phone: str | None = None,
+    avatar_emoji: str | None = None,
+) -> int:
+    """Admin create with the profile fields the admin panel manages."""
+    with get_session() as session:
+        return execute_insert(
+            session,
+            text(q.INSERT_ADMIN),
+            {
+                "email": email,
+                "full_name": full_name,
+                "role_id": role_id,
+                "organization_id": organization_id,
+                "phone": phone,
+                "avatar_emoji": avatar_emoji,
+            },
+        )
+
+
+def update_user_admin(
+    user_id: int,
+    *,
+    full_name: str,
+    role_id: int | None,
+    organization_id: int | None,
+    phone: str | None,
+    avatar_emoji: str | None,
+) -> None:
+    with get_session() as session:
+        session.execute(
+            text(q.UPDATE_ADMIN),
+            {
+                "id": user_id,
+                "full_name": full_name,
+                "role_id": role_id,
+                "organization_id": organization_id,
+                "phone": phone,
+                "avatar_emoji": avatar_emoji,
+            },
+        )
+
+
+def names_for_ids(ids: list[int]) -> dict[int, str]:
+    """Map user id -> full_name for the given ids (feed enrichment)."""
+    if not ids:
+        return {}
+    stmt = text(q.NAMES_BY_IDS).bindparams(bindparam("ids", expanding=True))
+    with get_session() as session:
+        rows = session.execute(stmt, {"ids": list(set(ids))}).mappings().all()
+        return {r["id"]: r["full_name"] for r in rows}
+
+
+def top_by_points(organization_id: int, *, limit: int = 6) -> list[dict[str, Any]]:
+    """Top earners in an org (feed spotlight / leaderboard)."""
+    with get_session() as session:
+        rows = (
+            session.execute(
+                text(q.TOP_BY_POINTS),
+                {"organization_id": organization_id, "limit": limit},
+            )
+            .mappings()
+            .all()
+        )
+        return [
+            {"user_id": r["id"], "name": r["full_name"], "points": r["points_balance"]}
+            for r in rows
+        ]
+
+
+def set_points_balance(user_id: int, points: int) -> None:
+    """Set a user's earned balance to an absolute value (seeding)."""
+    with get_session() as session:
+        session.execute(text(q.SET_POINTS_BALANCE), {"id": user_id, "points": points})
+
+
+def set_user_active(user_id: int, *, is_active: bool) -> None:
+    """Soft-delete / reactivate a user (``is_active`` flag)."""
+    with get_session() as session:
+        session.execute(
+            text(q.SET_ACTIVE),
+            {"id": user_id, "is_active": 1 if is_active else 0},
         )

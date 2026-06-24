@@ -1,74 +1,42 @@
-/* Recognition feed item — RN port of frontend/src/components/RecognitionCard.jsx. */
-import { useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+/* Recognition feed item (#44, RN) — renders an enriched backend feed item. */
+import { View, Text } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Icon, Avatar, Sparkles, FEED_AVATAR_TONE as AV } from './ui';
-import { getUser, valueById, schoolById } from '../data/mock';
-import { timeAgo } from '../lib/format';
+import { Avatar, FEED_AVATAR_TONE as AV } from './ui';
 import { colors, fontFamily } from '../theme';
+import { timeAgo } from '../lib/format';
 
-export default function RecognitionCard({ r, first }) {
+export default function RecognitionCard({ item, first }) {
   const { t } = useTranslation();
-  const from = getUser(r.from);
-  const to = getUser(r.to);
-  const val = valueById(r.value);
-  const [claps, setClaps] = useState(r.claps);
-  const [clapped, setClapped] = useState(false);
-  const [burst, setBurst] = useState(false);
-
-  const clap = () => {
-    const next = !clapped;
-    setClapped(next);
-    setClaps((v) => v + (next ? 1 : -1));
-    if (next) {
-      setBurst(true);
-      setTimeout(() => setBurst(false), 900);
-    }
-  };
+  const val = item.values && item.values[0];
+  const mins = item.created_at
+    ? Math.max(0, Math.floor((Date.now() - Date.parse(item.created_at)) / 60000))
+    : 0;
 
   return (
     <View style={{ paddingHorizontal: 4, paddingVertical: 24, borderTopWidth: first ? 0 : 1, borderColor: colors.rule }}>
-      {/* who → whom */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-        <Avatar name={from.name} size={44} tone={AV} />
+        <Avatar name={item.from_name} size={44} tone={AV} />
         <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={{ fontFamily, fontSize: 15.5, color: colors.ink, lineHeight: 21 }}>
-            <Text style={{ fontWeight: '700' }}>{from.name}</Text>
-            <Text style={{ color: colors.ink3 }}>{` ${t('feed.recognized')} `}</Text>
-            <Text style={{ fontWeight: '700' }}>{to.name}</Text>
+          <Text style={{ fontFamily, fontSize: 15.5, color: colors.ink }}>
+            <Text style={{ fontWeight: '700' }}>{item.from_name}</Text>
+            <Text style={{ color: colors.ink3 }}>{' ' + t('feed.recognized') + ' '}</Text>
+            <Text style={{ fontWeight: '700' }}>{item.to_name}</Text>
           </Text>
-          <Text style={{ fontFamily, marginTop: 2, fontSize: 12.5, color: colors.ink3 }}>
-            {timeAgo(r.mins, t)} · {schoolById(to.school).short}
-          </Text>
+          <Text style={{ fontFamily, fontSize: 12.5, color: colors.ink3, marginTop: 2 }}>{timeAgo(mins, t)}</Text>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-          <Text style={{ fontSize: 16, color: colors.gold }}>★</Text>
-          <Text style={{ fontFamily, fontSize: 16, fontWeight: '800', color: colors.goldDeep }}>+{r.points}</Text>
-        </View>
+        <Text style={{ fontFamily, fontSize: 16, fontWeight: '800', color: colors.goldDeep }}>★ +{item.points}</Text>
       </View>
 
-      {/* message */}
-      <Text style={{ fontFamily, paddingStart: 56, fontSize: 16.5, lineHeight: 27, color: colors.ink }}>{r.msg}</Text>
+      {item.message ? (
+        <Text style={{ fontFamily, fontSize: 16.5, lineHeight: 27, color: colors.ink, paddingStart: 56 }}>{item.message}</Text>
+      ) : null}
 
-      {/* footer */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 16, paddingStart: 56 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+      {val ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 16, paddingStart: 56 }}>
           <Text style={{ fontSize: 15 }}>{val.emoji}</Text>
-          <Text style={{ fontFamily, fontSize: 13, fontWeight: '600', color: colors.ink2 }}>{t(`values.${val.id}`)}</Text>
+          <Text style={{ fontFamily, fontSize: 13, fontWeight: '600', color: colors.ink2 }}>{val.key}</Text>
         </View>
-        <View style={{ flex: 1 }} />
-        <Pressable onPress={clap} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 4, paddingVertical: 5 }}>
-          <Sparkles run={burst} count={12} />
-          <Text style={{ fontSize: 15 }}>👏</Text>
-          <Text style={{ fontFamily, fontWeight: '600', fontSize: 13.5, color: clapped ? colors.goldDeep : colors.ink3 }}>{claps}</Text>
-        </Pressable>
-        <Pressable style={{ padding: 4 }} accessibilityLabel={t('feed.commentAria')}>
-          <Icon name="message-circle" size={16} color={colors.ink3} />
-        </Pressable>
-        <Pressable style={{ padding: 4 }} accessibilityLabel={t('feed.shareAria')}>
-          <Icon name="share-2" size={15} color={colors.ink3} />
-        </Pressable>
-      </View>
+      ) : null}
     </View>
   );
 }

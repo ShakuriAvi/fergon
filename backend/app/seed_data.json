@@ -1,0 +1,72 @@
+{
+  "_comment": "Dev-only seed content (#40). Hebrew lives here as data, not in seed.py source. Mirrors the former frontend/src/data/mock.js. Loaded by app/seed.py.",
+  "schools": [
+    {"key": "herzl", "name": "בית ספר הרצל תל אביב", "short_name": "הרצל ת״א", "city": "תל אביב"},
+    {"key": "rabin", "name": "חטיבת ביניים רבין חיפה", "short_name": "רבין חיפה", "city": "חיפה"},
+    {"key": "golda", "name": "בית ספר גולדה ירושלים", "short_name": "גולדה י-ם", "city": "ירושלים"},
+    {"key": "ort", "name": "תיכון אורט באר שבע", "short_name": "אורט ב״ש", "city": "באר שבע"}
+  ],
+  "values": {
+    "innov": {"key": "חדשנות", "emoji": "💡", "tone": "gold"},
+    "collab": {"key": "שיתוף פעולה", "emoji": "🤝", "tone": "green"},
+    "mentor": {"key": "חניכה", "emoji": "🌱", "tone": "green"},
+    "devote": {"key": "מסירות", "emoji": "💪", "tone": "terra"},
+    "create": {"key": "יצירתיות", "emoji": "🎨", "tone": "terra"},
+    "lead": {"key": "מנהיגות", "emoji": "🏆", "tone": "gold"}
+  },
+  "users": [
+    {"key": "yael", "full_name": "יעל כהן", "role": "teacher", "school": "herzl", "points": 340, "allowance": 100, "given": 60},
+    {"key": "david", "full_name": "דוד לוי", "role": "teacher", "school": "rabin", "points": 215, "allowance": 100, "given": 40},
+    {"key": "noa", "full_name": "נועה פרידמן", "role": "teacher", "school": "golda", "points": 510, "allowance": 120, "given": 85},
+    {"key": "itai", "full_name": "איתי שפירא", "role": "teacher", "school": "ort", "points": 95, "allowance": 100, "given": 25},
+    {"key": "michal", "full_name": "מיכל ברק", "role": "teacher", "school": "herzl", "points": 420, "allowance": 100, "given": 70},
+    {"key": "avi", "full_name": "אבי מזרחי", "role": "principal", "school": "herzl", "points": 180, "allowance": 200, "given": 150},
+    {"key": "rotem", "full_name": "רותם אזולאי", "role": "teacher", "school": "rabin", "points": 265, "allowance": 100, "given": 55},
+    {"key": "shira", "full_name": "שירה גולן", "role": "teacher", "school": "golda", "points": 300, "allowance": 100, "given": 48},
+    {"key": "omer", "full_name": "עומר דהן", "role": "teacher", "school": "ort", "points": 130, "allowance": 100, "given": 30},
+    {"key": "tamar", "full_name": "תמר וייס", "role": "principal", "school": "golda", "points": 390, "allowance": 150, "given": 110}
+  ],
+  "extra_users": [
+    {"key": "admin", "full_name": "מנהל/ת מערכת", "role": "admin", "school": "herzl", "points": 0, "allowance": 0, "given": 0},
+    {"key": "secretary", "full_name": "מזכיר/ה", "role": "secretary", "school": "herzl", "points": 0, "allowance": 80, "given": 0},
+    {"key": "student", "full_name": "תלמיד/ה", "role": "student", "school": "herzl", "points": 0, "allowance": 20, "given": 0},
+    {"key": "server", "full_name": "עובד/ת", "role": "server", "school": "herzl", "points": 0, "allowance": 50, "given": 0}
+  ],
+  "rewards": [
+    {"provider": "סטימצקי", "title": "שובר זיכוי לספרים", "category": "books", "cost": 120, "emoji": "📚", "color": "#1F6FB2", "blurb": "שובר בשווי 50 ₪ לכל חנויות הרשת"},
+    {"provider": "צומת ספרים", "title": "שובר ספרים דיגיטלי", "category": "books", "cost": 110, "emoji": "📖", "color": "#C8553D", "blurb": "שובר בשווי 50 ₪ לרכישה אונליין"},
+    {"provider": "שופרסל", "title": "שובר קנייה", "category": "shop", "cost": 220, "emoji": "🛒", "color": "#E03A3E", "blurb": "שובר בשווי 100 ₪ לכל סניפי הרשת"},
+    {"provider": "BUYME", "title": "שובר מתנה לבחירה", "category": "shop", "cost": 200, "emoji": "🎁", "color": "#2D5A3D", "blurb": "בחירה מתוך מאות בתי עסק"},
+    {"provider": "YES Planet", "title": "כרטיס סרט זוגי + פופקורן", "category": "fun", "cost": 180, "emoji": "🎬", "color": "#0E2A6B", "blurb": "שני כרטיסים לכל סרט בתפוצה"},
+    {"provider": "קפה לנדוור", "title": "ארוחת בוקר זוגית", "category": "food", "cost": 160, "emoji": "🍳", "color": "#5B3A1E", "blurb": "ארוחת בוקר ישראלית לשניים"},
+    {"provider": "ארומה", "title": "כרטיסייה לקפה", "category": "food", "cost": 90, "emoji": "☕", "color": "#7A1F2B", "blurb": "חמישה כוסות קפה לבחירתך"},
+    {"provider": "FOX", "title": "שובר אופנה", "category": "shop", "cost": 200, "emoji": "👕", "color": "#1F1A14", "blurb": "שובר בשווי 100 ₪ ברשת FOX"}
+  ],
+  "recognitions": [
+    {"from": "michal", "to": "yael", "value": "collab", "points": 8, "message": "תודה ענקית על שעזרת לי לבנות את מבחן האמצע במתמטיקה ברגע האחרון. נשארת אחרי הצהריים בלי לחשוב פעמיים — זה בדיוק מה ששיתוף פעולה אמיתי נראה כמו."},
+    {"from": "noa", "to": "shira", "value": "innov", "points": 10, "message": "הרעיון שלך לשלב פודקאסטים בשיעורי האנגלית פשוט שינה את האווירה בכיתה. התלמידים מדברים על זה גם בהפסקות. כל הכבוד על החדשנות."},
+    {"from": "avi", "to": "michal", "value": "devote", "points": 6, "message": "ראיתי איך ליווית את דניאל לאורך כל השבוע הקשה שלו. ההשקעה והמסירות שלך לכל ילד וילדה הן מה שעושה את בית הספר הזה למה שהוא."},
+    {"from": "rotem", "to": "david", "value": "mentor", "points": 7, "message": "תודה שלקחת את המורה החדש תחת חסותך. הוא סיפר לי כמה הישיבות איתך עזרו לו להרגיש בבית. חניכה אמיתית."},
+    {"from": "shira", "to": "noa", "value": "lead", "points": 9, "message": "הדרך שבה ניהלת את ישיבת השכבה אתמול הייתה שיעור במנהיגות. נתת לכולם מקום לדבר ועדיין יצאנו עם החלטה ברורה."},
+    {"from": "omer", "to": "itai", "value": "collab", "points": 5, "message": "תודה על שיתוף הפעולה בארגון יום הספורט. בלי העזרה שלך עם הלוגיסטיקה זה לא היה קורה."},
+    {"from": "yael", "to": "rotem", "value": "devote", "points": 8, "message": "את תמיד זמינה לכל תלמיד שצריך אוזן קשבת, גם כשהיומן שלך מלא. המסירות שלך מדבקת."},
+    {"from": "tamar", "to": "avi", "value": "lead", "points": 10, "message": "תודה על ההובלה הרגועה של בית הספר דרך המעבר למערכת החדשה. שמרת על כולנו מאוזנים. מנהיגות שקטה וחזקה."},
+    {"from": "david", "to": "omer", "value": "create", "points": 6, "message": "הקיר שעיצבת עם התלמידים במסדרון הוא יצירת אמנות אמיתית. כל מי שעובר שם מחייך. יצירתיות בשיאה."},
+    {"from": "michal", "to": "noa", "value": "mentor", "points": 7, "message": "תודה שחנכת אותי בשנה הראשונה שלי כמחנכת. כל מה שאני יודעת על ניהול כיתה הגיע ממך."},
+    {"from": "itai", "to": "yael", "value": "innov", "points": 9, "message": "השימוש שלך בסימולציות אינטראקטיביות בשיעורי הגאומטריה הוא פשוט מבריק. גנבתי כמה רעיונות לפיזיקה, מקווה שזה בסדר."},
+    {"from": "noa", "to": "tamar", "value": "collab", "points": 8, "message": "העבודה המשותפת על תוכנית ההכלה החדשה הייתה תענוג. תודה על הסבלנות וההקשבה לאורך כל הדרך."},
+    {"from": "avi", "to": "shira", "value": "devote", "points": 7, "message": "נשארת ללוות את חוג התיאטרון עד מאוחר שבוע אחרי שבוע. התלמידים יזכרו את זה שנים. תודה על המסירות."},
+    {"from": "rotem", "to": "michal", "value": "create", "points": 6, "message": "הדרך היצירתית שבה הפכת את שיעור הספרות למשחק תפקידים החזירה את הברק לעיניים של הכיתה. כל הכבוד."},
+    {"from": "shira", "to": "david", "value": "mentor", "points": 8, "message": "תודה על שהדרכת אותי בכתיבת ההמלצות לתלמידים. למדתי ממך איך לראות את הטוב בכל אחד."},
+    {"from": "tamar", "to": "omer", "value": "lead", "points": 9, "message": "לקחת אחריות על נבחרת בית הספר והפכת אותה לקהילה. ההובלה שלך מעוררת השראה."},
+    {"from": "yael", "to": "noa", "value": "innov", "points": 10, "message": "מערכת המנטורים בין-השכבתית שיזמת היא הדבר הכי טוב שקרה לבית הספר השנה. חדשנות שמשנה תרבות."}
+  ],
+  "role_allowances": {
+    "principal": 200,
+    "teacher": 100,
+    "secretary": 80,
+    "student": 20,
+    "server": 50,
+    "admin": 0
+  }
+}

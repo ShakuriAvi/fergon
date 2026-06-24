@@ -1,13 +1,14 @@
 /* Login page — ported from fergon.html. Google SSO / guest both
    call onLogin (mock auth). Text via i18n; styling via Tailwind. */
 import { useTranslation } from 'react-i18next';
+import { I18N } from './constants.js';
 import { Icon } from './primitives.jsx';
 import { useViewport } from '../hooks/useViewport.js';
 
 export default function LoginView({ onLogin }) {
   const { t } = useTranslation();
   const { isMobile } = useViewport();
-  const brand = t('app.brand');
+  const brand = t(I18N.APP_BRAND);
 
   return (
     <div className={cxBase(isMobile)}>
@@ -51,7 +52,7 @@ export default function LoginView({ onLogin }) {
         {/* Google SSO */}
         <button
           type="button"
-          onClick={onLogin}
+          onClick={() => onLogin('admin')}
           className="flex w-full cursor-pointer items-center justify-center gap-[12px] whitespace-nowrap rounded-2 border border-rule-strong bg-card-cream px-[18px] py-[14px] font-body text-[15.5px] font-semibold text-ink transition-all duration-1 ease-sy hover:bg-paper-sink"
         >
           <svg width="20" height="20" viewBox="0 0 48 48">
@@ -70,7 +71,7 @@ export default function LoginView({ onLogin }) {
 
         <button
           type="button"
-          onClick={onLogin}
+          onClick={() => onLogin('member')}
           className="mt-[16px] cursor-pointer border-none bg-transparent font-body text-[14px] font-semibold text-ink-2 underline decoration-rule-strong underline-offset-[3px]"
         >
           {t('login.guest')}

@@ -58,7 +58,22 @@ class Settings(BaseSettings):
     JWT_EXPIRE_MINUTES: int = 60
     DEFAULT_USER_ROLE: str = "teacher"
 
+    # Browser origins allowed to call the API (comma-separated). Defaults to the
+    # local dev frontends (Vite web + Expo web) so the SPA can call the backend.
+    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:8081"
+
+    # Local dev server bind address (used only by the ``python -m`` / __main__
+    # runner). In real deployments the process manager (gunicorn/uvicorn/Cloud
+    # Run) sets host/port, so these are not read there.
+    HOST: str = "127.0.0.1"
+    PORT: int = 8000
+
     model_config = SettingsConfigDict(extra="ignore", case_sensitive=True)
+
+    @property
+    def cors_origins(self) -> list[str]:
+        """Parsed list of allowed CORS origins."""
+        return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
 
     @property
     def database_url(self) -> str:

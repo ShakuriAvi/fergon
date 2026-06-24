@@ -10,8 +10,10 @@
   "auth.register_success": "ההרשמה הושלמה בהצלחה",
   "auth.user_exists": "משתמש עם כתובת דוא\"ל זו כבר קיים במערכת",
   "auth.invalid_google_token": "אימות מול Google נכשל",
+  "auth.user_not_found": "לא נמצא משתמש פעיל עם כתובת דוא\"ל זו",
   "permissions.unauthenticated": "עליך להתחבר כדי לגשת למשאב זה",
   "permissions.forbidden": "אין לך הרשאה לבצע פעולה זו",
+  "permissions.csrf": "בקשה לא תקפה: אסימון אבטחה (CSRF) חסר או שגוי",
   "user.role.admin": "מנהל מערכת",
   "user.role.principal": "מנהל בית ספר",
   "user.role.teacher": "מורה",
@@ -24,5 +26,11 @@
   "posts.insufficient_allowance": "אין לך מספיק נקודות מכסה חודשית להענקה זו",
   "redemption.not_found": "המשתמש או ההטבה לא נמצאו",
   "redemption.insufficient": "אין לך מספיק נקודות למימוש הטבה זו",
-  "allowance.reset_done": "מכסות החודש אופסו בהצלחה"
+  "redemption.unavailable": "ההטבה אינה זמינה למימוש כעת",
+  "allowance.reset_done": "מכסות החודש אופסו בהצלחה",
+  "role.name_taken": "כבר קיים תפקיד עם שם זה",
+  "recognition_value.key_taken": "כבר קיים ערך הוקרה עם שם זה",
+  "recognition_value.not_found": "ערך ההוקרה לא נמצא",
+  "user.invalid_role": "התפקיד שנבחר אינו קיים",
+  "user.invalid_organization": "הארגון שנבחר אינו קיים"
 }

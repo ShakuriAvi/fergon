@@ -28,6 +28,16 @@ class RoleCreate(BaseModel):
     rolls_up: bool = False
 
 
+class RoleUpdate(BaseModel):
+    """Payload to update a role."""
+
+    name: str = Field(min_length=1, max_length=50)
+    name_he: str = Field(min_length=1, max_length=120)
+    access_level: AccessLevel = AccessLevel.MEMBER
+    is_manager: bool = False
+    rolls_up: bool = False
+
+
 class RoleRead(BaseModel):
     """Role representation returned to the frontend."""
 
@@ -37,5 +47,6 @@ class RoleRead(BaseModel):
     access_level: AccessLevel
     is_manager: bool
     rolls_up: bool
+    is_active: bool = True
     created_at: datetime | None = None
     updated_at: datetime | None = None

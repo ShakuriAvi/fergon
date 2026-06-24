@@ -74,3 +74,36 @@ def orm_db(tmp_path):
             role_ids[name] = role.id
     yield role_ids
     reset_engine()
+
+
+@pytest.fixture
+def admin_client(orm_db):
+    """A TestClient mounting only the admin router against the SQLite ``orm_db``.
+
+    The admin guard reads ``access_level`` from the JWT, so no PermissionsMiddleware
+    is needed here — use ``admin_headers`` / ``member_headers`` to authenticate.
+    """
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from app.api.routes import admin
+
+    app = FastAPI()
+    app.include_router(admin.router)
+    return TestClient(app)
+
+
+@pytest.fixture
+def admin_headers():
+    from app.core.security import create_access_token
+
+    token = create_access_token(user_id=1, role="admin", access_level="admin")
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def member_headers():
+    from app.core.security import create_access_token
+
+    token = create_access_token(user_id=2, role="teacher", access_level="member")
+    return {"Authorization": f"Bearer {token}"}

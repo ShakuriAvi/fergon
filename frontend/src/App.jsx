@@ -1,59 +1,84 @@
-/* App root — ported from fergon.html. State-based routing:
-   authed gate → Shell + active view, with the give modal overlay. */
-import { useState } from 'react';
-import LoginView from './components/LoginView.jsx';
+/* App root (#42/#43). Path-based split:
+   - /admin  → standalone admin tool (its own login + guard)
+   - /        → consumer app (email dev-login → backend-driven feed/profile/…) */
+import { useEffect, useReducer, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import AdminApp from './components/AdminApp.jsx';
+import DevLoginView from './components/DevLoginView.jsx';
 import Shell from './components/Shell.jsx';
 import FeedView from './components/FeedView.jsx';
 import ProfileView from './components/ProfileView.jsx';
 import RewardsView from './components/RewardsView.jsx';
 import PrincipalView from './components/PrincipalView.jsx';
-import AdminView from './components/AdminView.jsx';
 import GiveModal from './components/GiveModal.jsx';
-import { getUser, ME } from './data/mock.js';
+import { CurrentUserProvider, useMe } from './context/CurrentUser.jsx';
+import { isAuthed } from './lib/auth.js';
+import { api } from './lib/api.js';
+import { VIEW, ROUTE } from './constants.js';
+import { I18N } from './components/constants.js';
+
+function isAdminRoute() {
+  return typeof window !== 'undefined' && window.location.pathname.startsWith(ROUTE.ADMIN_PREFIX);
+}
 
 export default function App() {
-  const me = getUser(ME);
-  const [authed, setAuthed] = useState(false);
-  const [view, setView] = useState('feed');
-  const [giveOpen, setGiveOpen] = useState(false);
-  const [allowanceLeft, setAllowanceLeft] = useState(me.allowance - me.given);
-  const [points, setPoints] = useState(me.points);
+  if (isAdminRoute()) return <AdminApp />;
+  return <ConsumerApp />;
+}
 
+function ConsumerApp() {
+  const [version, bump] = useReducer((x) => x + 1, 0);
+  if (!isAuthed()) return <DevLoginView onSuccess={bump} />;
+  return (
+    <CurrentUserProvider key={version} onLogout={bump}>
+      <ConsumerShell />
+    </CurrentUserProvider>
+  );
+}
+
+function ConsumerShell() {
+  const { t } = useTranslation();
+  const { user, loading } = useMe();
+  const [view, setView] = useState(VIEW.FEED);
+  const [giveOpen, setGiveOpen] = useState(false);
+  const [wallet, setWallet] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const loadWallet = () => api.wallet().then(setWallet).catch(() => setWallet(null));
+  useEffect(() => {
+    loadWallet();
+  }, [user?.id]);
+
+  const refresh = () => {
+    loadWallet();
+    setRefreshKey((k) => k + 1);
+  };
+
+  if (loading) {
+    return <div className="flex min-h-screen items-center justify-center text-ink-3">{t(I18N.COMMON_LOADING)}</div>;
+  }
+
+  const points = wallet?.points_balance ?? 0;
+  const allowanceLeft = wallet?.allowance_remaining ?? 0;
   const go = (v) => {
     setView(v);
     window.scrollTo?.(0, 0);
   };
 
-  if (!authed) {
-    return (
-      <LoginView
-        onLogin={() => {
-          setAuthed(true);
-          setView('feed');
-        }}
-      />
-    );
-  }
-
-  const onSent = (data) => {
-    setGiveOpen(false);
-    setAllowanceLeft((a) => Math.max(0, a - data.points));
-  };
-
-  const onRedeem = (reward) => setPoints((p) => Math.max(0, p - reward.cost));
-
-  const openGive = () => setGiveOpen(true);
-
   return (
     <>
-      <Shell active={view} onNavigate={go} onGive={openGive} points={points}>
-        {view === 'feed' ? <FeedView onGive={openGive} points={points} allowanceLeft={allowanceLeft} /> : null}
-        {view === 'profile' ? <ProfileView onGive={openGive} points={points} allowanceLeft={allowanceLeft} /> : null}
-        {view === 'rewards' ? <RewardsView points={points} onRedeem={onRedeem} /> : null}
-        {view === 'principal' ? <PrincipalView /> : null}
-        {view === 'admin' ? <AdminView /> : null}
+      <Shell active={view} onNavigate={go} onGive={() => setGiveOpen(true)} points={points}>
+        {view === VIEW.FEED ? <FeedView onGive={() => setGiveOpen(true)} points={points} allowanceLeft={allowanceLeft} refreshKey={refreshKey} /> : null}
+        {view === VIEW.PROFILE ? <ProfileView onGive={() => setGiveOpen(true)} points={points} allowanceLeft={allowanceLeft} refreshKey={refreshKey} /> : null}
+        {view === VIEW.REWARDS ? <RewardsView points={points} onRedeemed={refresh} refreshKey={refreshKey} /> : null}
+        {view === VIEW.PRINCIPAL ? <PrincipalView refreshKey={refreshKey} /> : null}
       </Shell>
-      <GiveModal open={giveOpen} onClose={() => setGiveOpen(false)} onSent={onSent} allowanceLeft={allowanceLeft} />
+      <GiveModal
+        open={giveOpen}
+        onClose={() => setGiveOpen(false)}
+        onSent={() => { setGiveOpen(false); refresh(); }}
+        allowanceLeft={allowanceLeft}
+      />
     </>
   );
 }

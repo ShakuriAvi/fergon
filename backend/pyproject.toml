@@ -1,0 +1,13 @@
+[tool.bandit]
+# Security SAST configuration for the fergon backend.
+# Run via pre-commit, or directly: bandit -c backend/pyproject.toml -r backend/app
+exclude_dirs = ["tests", "alembic", "logs"]
+# B101: assert_used — assertions are fine in tests; we already exclude tests above.
+# B608: hardcoded_sql_expressions — the db layer builds SQL with f-strings, but
+# only hardcoded column/table CONSTANTS (e.g. `_COLUMNS`, literal table names)
+# are ever interpolated; every user-supplied value is passed as a bound
+# parameter (`:name`) via SQLAlchemy `text()`. B608 is a low-confidence string
+# heuristic that cannot see this, so it only yields false positives here. The
+# one dynamic builder (app/db/_filters.py) likewise interpolates caller-provided
+# constant identifiers and binds all values. Skip the check project-wide.
+skips = ["B608"]

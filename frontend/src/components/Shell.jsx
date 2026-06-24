@@ -1,10 +1,12 @@
-/* App shell — ported from fergon.html. Desktop sidebar + topbar,
-   mobile topbar + bottom tabs with center "give" FAB. */
+/* App shell — desktop sidebar + topbar, mobile topbar + bottom tabs.
+   Reads the current user from context (no mock). The admin tool lives at its own
+   /admin route (#42), so there is no admin entry here. */
 import { useTranslation } from 'react-i18next';
 import { Icon, Avatar, Button } from './primitives.jsx';
 import { useViewport } from '../hooks/useViewport.js';
-import { getUser, ME, schoolById } from '../data/mock.js';
+import { useMe } from '../context/CurrentUser.jsx';
 import { cx } from '../lib/cx.js';
+import { VIEW, GIVE_TAB, I18N } from './constants.js';
 
 export function Logo({ size = 34, showWord = true, light = false }) {
   const { t } = useTranslation();
@@ -20,7 +22,7 @@ export function Logo({ size = 34, showWord = true, light = false }) {
             className={cx('font-display font-extrabold tracking-[-0.02em]', light ? 'text-white' : 'text-ink')}
             style={{ fontSize: size * 0.62 }}
           >
-            {t('app.brand')}
+            {t(I18N.APP_BRAND)}
           </div>
         </div>
       ) : null}
@@ -29,11 +31,10 @@ export function Logo({ size = 34, showWord = true, light = false }) {
 }
 
 const NAV = [
-  { id: 'feed', icon: 'layout-list' },
-  { id: 'profile', icon: 'wallet' },
-  { id: 'rewards', icon: 'gift' },
-  { id: 'principal', icon: 'bar-chart-3' },
-  { id: 'admin', icon: 'shield-check' },
+  { id: VIEW.FEED, icon: 'layout-list' },
+  { id: VIEW.PROFILE, icon: 'wallet' },
+  { id: VIEW.REWARDS, icon: 'gift' },
+  { id: VIEW.PRINCIPAL, icon: 'bar-chart-3' },
 ];
 
 function NavItem({ it, active, onClick }) {
@@ -56,7 +57,8 @@ function NavItem({ it, active, onClick }) {
 
 function Sidebar({ active, onNavigate, onGive }) {
   const { t } = useTranslation();
-  const me = getUser(ME);
+  const { user, logout } = useMe();
+  const name = user?.full_name || '';
   return (
     <aside className="flex h-full w-[248px] shrink-0 flex-col gap-1 border-l border-rule bg-card-cream p-[18px]">
       <div className="px-[8px] pb-[16px] pt-[6px]">
@@ -64,7 +66,7 @@ function Sidebar({ active, onNavigate, onGive }) {
       </div>
 
       <Button variant="primary" size="md" icon="sparkles" onClick={onGive} className="mb-[10px] w-full text-[15px]">
-        {t('common.give')}
+        {t(I18N.COMMON_GIVE)}
       </Button>
 
       <div className="px-[12px] pb-[6px] pt-[10px] text-[11px] font-bold tracking-[0.08em] text-ink-3">{t('nav.section')}</div>
@@ -72,16 +74,15 @@ function Sidebar({ active, onNavigate, onGive }) {
         <NavItem key={it.id} it={it} active={active} onClick={() => onNavigate(it.id)} />
       ))}
 
-      <div
-        className="mt-auto flex cursor-pointer items-center gap-[10px] border-t border-rule pt-[12px]"
-        onClick={() => onNavigate('profile')}
-      >
-        <Avatar name={me.name} size={36} />
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[13.5px] font-bold text-ink">{me.name}</div>
-          <div className="text-[11.5px] text-ink-3">{schoolById(me.school).short}</div>
+      <div className="mt-auto flex items-center gap-[10px] border-t border-rule pt-[12px]">
+        <Avatar name={name} size={36} />
+        <div className="min-w-0 flex-1 cursor-pointer" onClick={() => onNavigate(VIEW.PROFILE)}>
+          <div className="truncate text-[13.5px] font-bold text-ink">{name}</div>
+          <div className="text-[11.5px] text-ink-3">{user?.role || ''}</div>
         </div>
-        <Icon name="chevron-left" size={15} className="text-ink-3" />
+        <button type="button" aria-label={t('nav.logout')} onClick={logout} className="text-ink-3">
+          <Icon name="log-out" size={16} />
+        </button>
       </div>
     </aside>
   );
@@ -89,7 +90,8 @@ function Sidebar({ active, onNavigate, onGive }) {
 
 function Topbar({ isMobile, onNavigate, points }) {
   const { t } = useTranslation();
-  const me = getUser(ME);
+  const { user } = useMe();
+  const name = user?.full_name || '';
   return (
     <header className={cx('flex h-[60px] shrink-0 items-center gap-[14px] border-b border-rule bg-paper', isMobile ? 'px-[16px]' : 'px-[28px]')}>
       {isMobile ? (
@@ -105,15 +107,14 @@ function Topbar({ isMobile, onNavigate, points }) {
       )}
       <div className={cx('mr-auto flex items-center', isMobile ? 'gap-[10px]' : 'gap-[16px]')}>
         <div
-          onClick={() => onNavigate('profile')}
+          onClick={() => onNavigate(VIEW.PROFILE)}
           className="flex cursor-pointer items-center gap-[7px] rounded-pill border border-gold-100 bg-gold-50 px-[12px] py-[6px]"
         >
           <span className="text-[15px] text-gold">★</span>
           <span className="tnum text-[14.5px] font-extrabold text-gold-deep">{points}</span>
-          {!isMobile ? <span className="text-[12.5px] font-semibold text-gold-deep">{t('common.points')}</span> : null}
+          {!isMobile ? <span className="text-[12.5px] font-semibold text-gold-deep">{t(I18N.COMMON_POINTS)}</span> : null}
         </div>
-        {isMobile ? null : <Icon name="bell" size={20} className="cursor-pointer text-ink-2" />}
-        {isMobile ? null : <Avatar name={me.name} size={36} />}
+        {isMobile ? null : <Avatar name={name} size={36} />}
       </div>
     </header>
   );
@@ -122,11 +123,11 @@ function Topbar({ isMobile, onNavigate, points }) {
 function BottomTabs({ active, onNavigate, onGive }) {
   const { t } = useTranslation();
   const items = [
-    { id: 'feed', icon: 'layout-list' },
-    { id: 'rewards', icon: 'gift' },
-    { id: '__give', icon: 'sparkles' },
-    { id: 'profile', icon: 'wallet' },
-    { id: 'principal', icon: 'bar-chart-3' },
+    { id: VIEW.FEED, icon: 'layout-list' },
+    { id: VIEW.REWARDS, icon: 'gift' },
+    { id: GIVE_TAB, icon: 'sparkles' },
+    { id: VIEW.PROFILE, icon: 'wallet' },
+    { id: VIEW.PRINCIPAL, icon: 'bar-chart-3' },
   ];
   return (
     <nav
@@ -134,13 +135,13 @@ function BottomTabs({ active, onNavigate, onGive }) {
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       {items.map((it) => {
-        if (it.id === '__give') {
+        if (it.id === GIVE_TAB) {
           return (
             <button
               key="give"
               type="button"
               onClick={onGive}
-              aria-label={t('common.give')}
+              aria-label={t(I18N.COMMON_GIVE)}
               className="-mt-[24px] flex h-[56px] w-[56px] shrink-0 cursor-pointer items-center justify-center rounded-full border-4 border-paper bg-primary text-white shadow-pop"
             >
               <Icon name="sparkles" size={24} stroke={2} />

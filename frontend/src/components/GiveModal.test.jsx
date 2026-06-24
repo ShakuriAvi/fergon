@@ -1,57 +1,71 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import GiveModal from './GiveModal.jsx';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import he from '../locales/he.json';
-import { getUser } from '../data/mock.js';
+
+vi.mock('../lib/api.js', () => {
+  class ApiError extends Error {}
+  return {
+    ApiError,
+    api: {
+      orgMembers: vi.fn().mockResolvedValue([{ id: 2, full_name: 'דוד לוי' }]),
+      orgValues: vi.fn().mockResolvedValue([
+        { id: 5, key: 'שיתוף פעולה', emoji: '🤝' },
+        { id: 6, key: 'מנהיגות', emoji: '🏆' },
+      ]),
+      givePost: vi.fn().mockResolvedValue({ id: 1 }),
+    },
+  };
+});
+
+import { api } from '../lib/api.js';
+import GiveModal from './GiveModal.jsx';
 
 const noop = () => {};
-const david = getUser('u_david').name; // mock peer used across the flow
-const overQuotaPrefix = he.give.overQuota.split('{{')[0].trim();
 
-describe('GiveModal', () => {
+describe('GiveModal (#43)', () => {
+  beforeEach(() => vi.clearAllMocks());
+
   it('renders nothing when closed', () => {
     const { container } = render(<GiveModal open={false} onClose={noop} />);
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('renders the four steps when open', () => {
+  it('renders the steps and loads members + values', async () => {
     render(<GiveModal open onClose={noop} allowanceLeft={40} />);
     expect(screen.getByRole('heading', { name: he.give.title })).toBeInTheDocument();
-    expect(screen.getByText(he.give.field1)).toBeInTheDocument();
-    expect(screen.getByText(he.give.field4)).toBeInTheDocument();
+    await waitFor(() => expect(api.orgMembers).toHaveBeenCalled());
+    expect(api.orgValues).toHaveBeenCalled();
   });
 
-  it('enables send only after peer, message and value are set', () => {
-    render(<GiveModal open onClose={noop} allowanceLeft={40} />);
-    const send = screen.getByRole('button', { name: he.give.send });
-    expect(send).toBeDisabled();
-
-    fireEvent.change(screen.getByPlaceholderText(he.give.searchPlaceholder), { target: { value: david } });
-    fireEvent.click(screen.getByText(david));
-    fireEvent.change(screen.getByPlaceholderText(he.give.msgPlaceholder), { target: { value: 'test message' } });
-    expect(send).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: new RegExp(he.values.collab) }));
-    expect(send).toBeEnabled();
-  });
-
-  it('warns when points exceed the allowance', () => {
-    render(<GiveModal open onClose={noop} allowanceLeft={3} />);
-    fireEvent.change(screen.getByRole('slider'), { target: { value: '8' } });
-    expect(screen.getByText(new RegExp(overQuotaPrefix))).toBeInTheDocument();
-  });
-
-  it('shows the success state and fires onSent after sending', () => {
+  it('submits a recognition via the backend and fires onSent', async () => {
     vi.useFakeTimers();
     const onSent = vi.fn();
     render(<GiveModal open onClose={noop} onSent={onSent} allowanceLeft={40} />);
-    fireEvent.change(screen.getByPlaceholderText(he.give.searchPlaceholder), { target: { value: david } });
-    fireEvent.click(screen.getByText(david));
-    fireEvent.change(screen.getByPlaceholderText(he.give.msgPlaceholder), { target: { value: 'great work' } });
-    fireEvent.click(screen.getByRole('button', { name: new RegExp(he.values.lead) }));
+
+    // members/values load (flush mocked promises)
+    await vi.runAllTimersAsync();
+
+    fireEvent.change(screen.getByPlaceholderText(he.give.searchPlaceholder), { target: { value: 'דוד' } });
+    fireEvent.click(screen.getByText('דוד לוי'));
+    fireEvent.change(screen.getByPlaceholderText(he.give.msgPlaceholder), { target: { value: 'כל הכבוד' } });
+    fireEvent.click(screen.getByRole('button', { name: /שיתוף פעולה/ }));
     fireEvent.click(screen.getByRole('button', { name: he.give.send }));
-    expect(screen.getByText(he.success.title)).toBeInTheDocument();
-    vi.runAllTimers();
-    expect(onSent).toHaveBeenCalledOnce();
+
+    await vi.runAllTimersAsync();
+    expect(api.givePost).toHaveBeenCalledWith({
+      to_user_id: 2,
+      points: 5,
+      message: 'כל הכבוד',
+      recognition_value_ids: [5],
+    });
+    expect(onSent).toHaveBeenCalled();
     vi.useRealTimers();
+  });
+
+  it('warns when points exceed the allowance', async () => {
+    render(<GiveModal open onClose={noop} allowanceLeft={3} />);
+    await waitFor(() => expect(api.orgValues).toHaveBeenCalled());
+    fireEvent.change(screen.getByRole('slider'), { target: { value: '8' } });
+    expect(screen.getByText(new RegExp(he.give.overQuota.split('{{')[0].trim()))).toBeInTheDocument();
   });
 });

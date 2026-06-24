@@ -1,18 +1,20 @@
-/* Rewards store — ported from fergon.html. */
-import { useState } from 'react';
+/* Rewards store (#43) — backend rewards catalog + real redemption. */
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { I18N } from './constants.js';
 import { Card, Icon, Button, Sparkles } from './primitives.jsx';
 import { useViewport } from '../hooks/useViewport.js';
-import { REWARDS, REWARD_CATS } from '../data/mock.js';
+import { api, ApiError } from '../lib/api.js';
 import { cx } from '../lib/cx.js';
+
+const CATS = ['all', 'books', 'food', 'shop', 'fun'];
 
 function RewardCard({ r, balance, onRedeem }) {
   const { t } = useTranslation();
   const afford = balance >= r.cost;
   return (
     <Card padded={false} hover className="flex h-full flex-col overflow-hidden">
-      {/* provider band */}
-      <div className="relative flex h-[92px] items-center justify-center" style={{ background: r.color }}>
+      <div className="relative flex h-[92px] items-center justify-center" style={{ background: r.color || 'var(--primary)' }}>
         <span className="text-[40px]">{r.emoji}</span>
         <span className="absolute bottom-[10px] right-[14px] text-[15px] font-bold tracking-[-0.01em] text-white/95">{r.provider}</span>
       </div>
@@ -45,8 +47,20 @@ function Row({ label, value, strong }) {
 function RedeemModal({ reward, balance, onClose, onConfirm }) {
   const { t } = useTranslation();
   const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
   if (!reward) return null;
   const after = balance - reward.cost;
+
+  const confirm = () => {
+    setBusy(true);
+    setError(null);
+    Promise.resolve(onConfirm(reward))
+      .then(() => setDone(true))
+      .catch((err) => setError(err instanceof ApiError ? err.detail || err.message : String(err)))
+      .finally(() => setBusy(false));
+  };
+
   return (
     <div className="scrim" onClick={onClose}>
       <div className="modal-card relative w-full max-w-[420px] overflow-hidden rounded-4 bg-paper shadow-modal" onClick={(e) => e.stopPropagation()}>
@@ -61,21 +75,21 @@ function RedeemModal({ reward, balance, onClose, onConfirm }) {
             <h2 className="mt-[16px] font-display text-[25px] font-extrabold text-ink">{t('rewards.doneTitle')}</h2>
             <p className="mt-[8px] text-[15px] leading-[1.6] text-ink-2">{t('rewards.doneBody', { provider: reward.provider })}</p>
             <div className="mt-[22px]">
-              <Button variant="primary" onClick={onClose} className="w-full">
-                {t('rewards.backToStore')}
-              </Button>
+              <Button variant="primary" onClick={onClose} className="w-full">{t('rewards.backToStore')}</Button>
             </div>
           </div>
         ) : (
           <>
-            <div className="flex h-[80px] items-center justify-center text-[36px]" style={{ background: reward.color }}>
+            <div className="flex h-[80px] items-center justify-center text-[36px]" style={{ background: reward.color || 'var(--primary)' }}>
               {reward.emoji}
             </div>
             <div className="p-[24px]">
               <h2 className="font-display text-[23px] font-extrabold text-ink">{t('rewards.confirmTitle')}</h2>
-              <p className="mt-[6px] text-[14.5px] text-ink-2">
-                {reward.provider} · {reward.title}
-              </p>
+              <p className="mt-[6px] text-[14.5px] text-ink-2">{reward.provider} · {reward.title}</p>
+
+              {error ? (
+                <div className="mt-[12px] rounded-2 bg-accent-50 px-[12px] py-[8px] text-[13px] text-accent-700">{error}</div>
+              ) : null}
 
               <div className="mt-[18px] overflow-hidden rounded-2 border border-rule">
                 <Row label={t('rewards.costLabel')} value={`★ ${reward.cost}`} />
@@ -84,19 +98,8 @@ function RedeemModal({ reward, balance, onClose, onConfirm }) {
               </div>
 
               <div className="mt-[22px] flex gap-[12px]">
-                <Button variant="ghost" onClick={onClose} className="flex-1 border border-rule">
-                  {t('rewards.cancel')}
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    setDone(true);
-                    onConfirm(reward);
-                  }}
-                  className="flex-1"
-                >
-                  {t('rewards.confirm')}
-                </Button>
+                <Button variant="ghost" onClick={onClose} className="flex-1 border border-rule">{t('rewards.cancel')}</Button>
+                <Button variant="primary" onClick={confirm} disabled={busy} className="flex-1">{t('rewards.confirm')}</Button>
               </div>
             </div>
           </>
@@ -106,21 +109,33 @@ function RedeemModal({ reward, balance, onClose, onConfirm }) {
   );
 }
 
-export default function RewardsView({ points, onRedeem }) {
+export default function RewardsView({ points, onRedeemed, refreshKey }) {
   const { t } = useTranslation();
   const { isMobile } = useViewport();
   const [cat, setCat] = useState('all');
   const [redeeming, setRedeeming] = useState(null);
+  const [state, setState] = useState({ rewards: [], loading: true, error: null });
   const balance = points;
-  const list = REWARDS.filter((r) => cat === 'all' || r.cat === cat);
+
+  useEffect(() => {
+    let cancelled = false;
+    setState((s) => ({ ...s, loading: true, error: null }));
+    api
+      .consumerRewards()
+      .then((rewards) => { if (!cancelled) setState({ rewards: rewards || [], loading: false, error: null }); })
+      .catch((error) => { if (!cancelled) setState((s) => ({ ...s, loading: false, error })); });
+    return () => { cancelled = true; };
+  }, [refreshKey]);
+
+  const list = state.rewards.filter((r) => cat === 'all' || r.category === cat);
+
+  const confirmRedeem = (reward) => api.redeem(reward.id).then((res) => { if (onRedeemed) onRedeemed(); return res; });
 
   return (
     <div className={cx('mx-auto max-w-[1180px]', isMobile ? 'px-[16px] py-[20px]' : 'px-[28px] py-[32px]')}>
       <div className="flex flex-wrap items-end justify-between gap-[16px]">
         <div>
-          <h1 className="font-display font-extrabold tracking-[-0.02em] text-ink" style={{ fontSize: isMobile ? 28 : 34 }}>
-            {t('rewards.title')}
-          </h1>
+          <h1 className="font-display font-extrabold tracking-[-0.02em] text-ink" style={{ fontSize: isMobile ? 28 : 34 }}>{t('rewards.title')}</h1>
           <p className="mt-[4px] text-[15px] text-ink-2">{t('rewards.subtitle')}</p>
         </div>
         <div className="inline-flex items-center gap-[8px] rounded-pill border border-gold-100 bg-gold-50 px-[16px] py-[9px]">
@@ -130,43 +145,37 @@ export default function RewardsView({ points, onRedeem }) {
         </div>
       </div>
 
-      {/* category filters */}
-      <div className="no-sb mt-[22px] flex gap-[8px] overflow-x-auto pb-[4px]">
-        {REWARD_CATS.map((c) => {
-          const on = c === cat;
-          return (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setCat(c)}
-              className={cx(
-                'cursor-pointer whitespace-nowrap rounded-pill border px-[16px] py-[8px] font-body text-[14px] font-semibold transition-all duration-1 ease-sy',
-                on ? 'border-primary bg-primary text-white' : 'border-rule bg-card-cream text-ink-2'
-              )}
-            >
-              {t(`rewardCats.${c}`)}
-            </button>
-          );
-        })}
-      </div>
-
-      <div
-        className="mt-[22px] grid gap-[16px]"
-        style={{ gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fill, minmax(240px, 1fr))' }}
-      >
-        {list.map((r, i) => (
-          <div key={r.id} className="rise" style={{ animationDelay: i * 40 + 'ms' }}>
-            <RewardCard r={r} balance={balance} onRedeem={setRedeeming} />
-          </div>
+      <div className="no-sb mt-[18px] flex gap-[8px] overflow-x-auto">
+        {CATS.map((c) => (
+          <button
+            key={c}
+            type="button"
+            onClick={() => setCat(c)}
+            className={cx(
+              'whitespace-nowrap rounded-pill border px-[14px] py-[7px] font-body text-[13.5px] font-semibold',
+              c === cat ? 'border-ink bg-ink text-paper' : 'border-rule bg-transparent text-ink-2'
+            )}
+          >
+            {c === 'all' ? t('feed.filterAll') : t(`rewardCats.${c}`)}
+          </button>
         ))}
       </div>
 
-      <RedeemModal
-        reward={redeeming}
-        balance={balance}
-        onClose={() => setRedeeming(null)}
-        onConfirm={onRedeem}
-      />
+      {state.loading ? (
+        <div className="py-[56px] text-center text-ink-3">{t(I18N.COMMON_LOADING)}</div>
+      ) : state.error ? (
+        <div className="py-[56px] text-center text-accent-700">{t(I18N.COMMON_ERROR)}</div>
+      ) : (
+        <div className="mt-[22px] grid gap-[16px]" style={{ gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fill, minmax(240px, 1fr))' }}>
+          {list.map((r, i) => (
+            <div key={r.id} className="rise" style={{ animationDelay: i * 40 + 'ms' }}>
+              <RewardCard r={r} balance={balance} onRedeem={setRedeeming} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      <RedeemModal reward={redeeming} balance={balance} onClose={() => setRedeeming(null)} onConfirm={confirmRedeem} />
     </div>
   );
 }

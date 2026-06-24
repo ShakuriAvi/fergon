@@ -70,6 +70,25 @@ def list_feed(
         return [_to_dict(p) for p in rows]
 
 
+def list_feed_page(
+    *, organization_id: int, limit: int = 20, offset: int = 0
+) -> tuple[list[dict[str, Any]], int]:
+    """Org-scoped feed page (most recent first) + total count."""
+    with get_session() as session:
+        rows = (
+            session.execute(
+                text(q.LIST_FEED_FOR_ORG_PAGED),
+                {"organization_id": organization_id, "limit": limit, "offset": offset},
+            )
+            .mappings()
+            .all()
+        )
+        total = session.execute(
+            text(q.COUNT_FOR_ORG), {"organization_id": organization_id}
+        ).scalar_one()
+        return [_to_dict(p) for p in rows], int(total)
+
+
 def list_for_user(user_id: int, *, direction: str = "received") -> list[dict[str, Any]]:
     """Posts received by (default) or given by the user."""
     sql = q.LIST_RECEIVED if direction == "received" else q.LIST_GIVEN

@@ -3,6 +3,7 @@
 import { View, Text } from 'react-native';
 import Svg, { Rect, Path } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
+import { I18N } from './constants';
 import { colors, fontFamily } from '../theme';
 
 const STAR = 'M20 9.5l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L20 24.8l-6.1 3.1 1.4-6.8-5.1-4.7 6.9-.8L20 9.5z';
@@ -23,7 +24,7 @@ export function Logo({ size = 34, showWord = true, light = false }) {
       <LogoMark size={size} />
       {showWord ? (
         <Text style={{ fontFamily, fontWeight: '800', fontSize: size * 0.62, color: light ? colors.white : colors.ink }}>
-          {t('app.brand')}
+          {t(I18N.APP_BRAND)}
         </Text>
       ) : null}
     </View>

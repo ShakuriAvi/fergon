@@ -97,3 +97,82 @@ def test_middleware_rejects_inactive_user_401():
         with TestClient(app) as client:
             resp = client.get("/secret", headers=_auth("teacher"))
     assert resp.status_code == 401
+
+
+# --- Cookie auth + CSRF (web transport) ------------------------------------
+
+def _cookie_app() -> FastAPI:
+    from app.middleware.permissions import PermissionsMiddleware
+
+    app = FastAPI()
+    app.add_middleware(PermissionsMiddleware)
+
+    @app.get("/secret")
+    def secret():
+        return {"ok": True}
+
+    @app.post("/secret")
+    def secret_write():
+        return {"ok": True}
+
+    return app
+
+
+def test_cookie_auth_get_no_csrf_required():
+    """A GET authenticated via the access cookie needs no CSRF token."""
+    from app.core.auth_cookies import ACCESS_COOKIE
+
+    app = _cookie_app()
+    token = create_access_token(user_id=1, role="teacher")
+    with patch("app.db.users.get_user_by_id", return_value=_ACTIVE_USER):
+        with TestClient(app) as client:
+            client.cookies.set(ACCESS_COOKIE, token)
+            assert client.get("/secret").status_code == 200
+
+
+def test_cookie_auth_post_without_csrf_403():
+    """A cookie-authenticated unsafe request without a CSRF token is rejected."""
+    from app.core.auth_cookies import ACCESS_COOKIE
+
+    app = _cookie_app()
+    token = create_access_token(user_id=1, role="teacher")
+    with patch("app.db.users.get_user_by_id", return_value=_ACTIVE_USER):
+        with TestClient(app) as client:
+            client.cookies.set(ACCESS_COOKIE, token)
+            assert client.post("/secret").status_code == 403
+
+
+def test_cookie_auth_post_with_matching_csrf_passes():
+    """Double-submit: matching CSRF cookie + header allows the unsafe request."""
+    from app.core.auth_cookies import ACCESS_COOKIE, CSRF_COOKIE, CSRF_HEADER
+
+    app = _cookie_app()
+    token = create_access_token(user_id=1, role="teacher")
+    with patch("app.db.users.get_user_by_id", return_value=_ACTIVE_USER):
+        with TestClient(app) as client:
+            client.cookies.set(ACCESS_COOKIE, token)
+            client.cookies.set(CSRF_COOKIE, "csrf-abc")
+            resp = client.post("/secret", headers={CSRF_HEADER: "csrf-abc"})
+    assert resp.status_code == 200
+
+
+def test_cookie_auth_post_with_mismatched_csrf_403():
+    from app.core.auth_cookies import ACCESS_COOKIE, CSRF_COOKIE, CSRF_HEADER
+
+    app = _cookie_app()
+    token = create_access_token(user_id=1, role="teacher")
+    with patch("app.db.users.get_user_by_id", return_value=_ACTIVE_USER):
+        with TestClient(app) as client:
+            client.cookies.set(ACCESS_COOKIE, token)
+            client.cookies.set(CSRF_COOKIE, "csrf-abc")
+            resp = client.post("/secret", headers={CSRF_HEADER: "wrong"})
+    assert resp.status_code == 403
+
+
+def test_bearer_post_exempt_from_csrf():
+    """Header (Bearer) auth needs no CSRF token even on unsafe methods."""
+    app = _cookie_app()
+    with patch("app.db.users.get_user_by_id", return_value=_ACTIVE_USER):
+        with TestClient(app) as client:
+            resp = client.post("/secret", headers=_auth("teacher"))
+    assert resp.status_code == 200

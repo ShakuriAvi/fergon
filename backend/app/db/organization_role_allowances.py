@@ -17,6 +17,7 @@ def _to_dict(row: Mapping[str, Any] | None) -> dict[str, Any] | None:
         "organization_id": row["organization_id"],
         "role_id": row["role_id"],
         "monthly_points": row["monthly_points"],
+        "is_active": bool(row["is_active"]),
         "created_at": row["created_at"],
         "updated_at": row["updated_at"],
     }
@@ -32,6 +33,51 @@ def list_for_organization(organization_id: int) -> list[dict[str, Any]]:
             .all()
         )
         return [_to_dict(r) for r in rows]
+
+
+def list_roles_with_allowance(organization_id: int) -> list[dict[str, Any]]:
+    """Every active role for the org with its (active) monthly_points, or None
+    when no allowance is configured for that role."""
+    with get_session() as session:
+        rows = (
+            session.execute(
+                text(q.LIST_ROLES_WITH_ALLOWANCE),
+                {"organization_id": organization_id},
+            )
+            .mappings()
+            .all()
+        )
+        return [
+            {
+                "role_id": r["role_id"],
+                "name": r["name"],
+                "name_he": r["name_he"],
+                "access_level": r["access_level"],
+                "allowance_id": r["allowance_id"],
+                "monthly_points": r["monthly_points"],
+                "is_active": bool(r["is_active"]) if r["is_active"] is not None else False,
+            }
+            for r in rows
+        ]
+
+
+def get_allowance_by_id(allowance_id: int) -> dict[str, Any] | None:
+    with get_session() as session:
+        row = (
+            session.execute(text(q.GET_BY_ID), {"id": allowance_id})
+            .mappings()
+            .first()
+        )
+        return _to_dict(row)
+
+
+def set_allowance_active(allowance_id: int, *, is_active: bool) -> None:
+    """Soft-delete / reactivate an allowance row (``is_active`` flag)."""
+    with get_session() as session:
+        session.execute(
+            text(q.SET_ACTIVE),
+            {"id": allowance_id, "is_active": 1 if is_active else 0},
+        )
 
 
 def get_monthly_points(organization_id: int, role_id: int) -> int | None:

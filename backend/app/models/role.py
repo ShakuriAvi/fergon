@@ -33,6 +33,9 @@ class Role(TimestampMixin, Base):
     rolls_up: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=text("0")
     )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("1")
+    )
 
     def __repr__(self) -> str:  # pragma: no cover - debug helper
         return f"<Role id={self.id} name={self.name!r} access={self.access_level}>"

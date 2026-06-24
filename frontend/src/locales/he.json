@@ -4,7 +4,13 @@
   },
   "common": {
     "give": "תן הכרה",
-    "points": "נקודות"
+    "points": "נקודות",
+    "save": "שמירה",
+    "saving": "שומר…",
+    "cancel": "ביטול",
+    "close": "סגירה",
+    "loading": "טוען…",
+    "error": "אירעה שגיאה. נסו שוב מאוחר יותר"
   },
   "login": {
     "tagline": "הכרה והוקרה לצוותי הוראה",
@@ -19,7 +25,16 @@
     "profile": "הארנק שלי",
     "rewards": "חנות ההטבות",
     "principal": "לוח מנהל",
-    "admin": "ניהול מערכת"
+    "admin": "ניהול מערכת",
+    "logout": "יציאה"
+  },
+  "devLogin": {
+    "heading": "כניסה למערכת",
+    "subtitle": "הזינו דוא״ל לזיהוי המשתמש (סביבת פיתוח בלבד)",
+    "placeholder": "name@fergon.dev",
+    "signIn": "כניסה",
+    "signingIn": "מתחבר…",
+    "tryHint": "לניסיון, בחרו אחד מהמשתמשים:"
   },
   "tabs": {
     "feed": "פיד",
@@ -99,7 +114,12 @@
     "notRecognizedSub": "שווה לשים לב ולהוקיר.",
     "allRecognized": "כל המורים קיבלו הכרה החודש. כל הכבוד.",
     "topTitle": "המוערכים ביותר",
-    "topSub": "לפי נקודות שהתקבלו החודש."
+    "topSub": "לפי נקודות שהתקבלו החודש.",
+    "title": "לוח מנהל",
+    "cardRecognitions": "הכרות בארגון",
+    "cardPoints": "נקודות שחולקו",
+    "cardPeople": "מוכרים מובילים",
+    "topRecipients": "המוערכים ביותר"
   },
   "admin": {
     "eyebrow": "ניהול מערכת",
@@ -147,7 +167,56 @@
     "statusInStock": "במלאי",
     "statusOut": "אזל",
     "editAria": "עריכה",
-    "moreAria": "עוד"
+    "moreAria": "עוד",
+    "deleteAria": "מחיקה (השבתה)",
+    "reactivateAria": "הפעלה מחדש",
+    "tabRoles": "תפקידים",
+    "statusInactive": "מושבת",
+    "showInactive": "הצג מושבתים",
+    "empty": "אין רשומות להצגה",
+    "manage": "ניהול",
+    "totalCount": "סך הכול: {{n}}",
+    "prev": "הקודם",
+    "next": "הבא",
+    "editSchool": "עריכת ארגון",
+    "editUser": "עריכת משתמש",
+    "editRole": "עריכת תפקיד",
+    "editValue": "עריכת ערך",
+    "editReward": "עריכת הטבה",
+    "addRole": "הוסף תפקיד",
+    "searchRoles": "חיפוש תפקיד…",
+    "colType": "סוג",
+    "colShortName": "שם מקוצר",
+    "colEmail": "דוא״ל",
+    "colPhone": "טלפון",
+    "colRoleName": "שם (אנגלית)",
+    "colRoleNameHe": "שם בעברית",
+    "colAccess": "רמת הרשאה",
+    "colIsManager": "מנהל/ת",
+    "colRollsUp": "מכסה מתגלגלת",
+    "colTone": "גוון",
+    "colColor": "צבע",
+    "colBlurb": "תיאור",
+    "colInStock": "במלאי",
+    "colMonthlyPoints": "נקודות לחודש",
+    "access": {
+      "admin": "מנהל מערכת",
+      "manager": "מנהל/ת",
+      "member": "חבר/ה"
+    },
+    "orgValuesTitle": "ערכי הוקרה של הארגון",
+    "orgValuesPick": "בחר ערך להוספה…",
+    "orgValuesAdd": "הוסף",
+    "orgValuesEmpty": "לא הוגדרו ערכים לארגון זה",
+    "orgValuesRemove": "הסר",
+    "orgAllowancesTitle": "מכסות חודשיות לפי תפקיד",
+    "clear": "נקה",
+    "backToList": "חזרה לרשימה",
+    "toolTitle": "פאנל ניהול מערכת",
+    "loginHeading": "כניסת מנהל מערכת",
+    "logout": "יציאה",
+    "accessDeniedTitle": "אין הרשאת גישה",
+    "accessDeniedBody": "פאנל הניהול זמין למשתמשי מנהל מערכת בלבד."
   },
   "give": {
     "title": "תן הכרה",

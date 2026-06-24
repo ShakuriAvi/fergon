@@ -13,7 +13,7 @@ Coding Conventions
 NEVER COMMIT. Do not run `git commit` (or `git push`, `git merge`, or any history-changing git command) under ANY circumstances — not even when executing a GitHub issue. Leave all changes in the working tree for me to review and commit myself. The only git commands you may run are read-only ones (e.g. `git status`, `git diff`, `git log`). If a workflow step below says to commit, ignore that step.
 
 # Backend (Python / FastAPI)
-View & Service architecture: Routes (views) handle HTTP request/response, auth, and validation only. 
+View & Service architecture: Routes (views) handle HTTP request/response, auth, and validation only.
 All business logic lives in services/. Never put DB queries or business logic directly in route handlers — delegate to a service function.
 
 SYNCHRONOUS CODE ONLY (STRICT): All backend code must be synchronous. Use plain `def` everywhere — never `async def`, `await`, `asyncio`, or `starlette.concurrency.run_in_threadpool`. This applies to routes/endpoints, services, the DB layer, and all helper functions. Sync endpoints are already run in a threadpool by FastAPI, so blocking work is fine.
@@ -31,12 +31,33 @@ All the code is written in English, create an additional file (json) that transl
 Create DB layer for manage all quries in one place. Use in Context Manager Pattern for manage the connection to db.
 For any changes add / delete / edit unit test.
 
+Soft delete (STRICT): NEVER hard-delete rows. Every "delete" action is a soft delete that sets `is_active = 0`. Any model that can be deleted must expose an `is_active` boolean column (server default `1`); add the column + an Alembic migration if it does not have one yet. List/read queries exclude inactive rows by default (offer an explicit `include_inactive` option where needed), and a corresponding reactivation path (`is_active = 1`) should be supported.
+
 # Frontend (React)
 Functional components with hooks only.
 All UI text via i18n keys — never hardcode Hebrew in JSX.
 Use react-i18next with locales/he.json as source of truth.
 Logging Strategy
 Add unit test for any changes.
+
+# Frontend constants (STRICT)
+No repeated/"magic" string literals inline in components. Every main folder
+under `src/` (`components`, `lib`, `hooks`, …) owns a `constants.js` that holds
+the repeated string literals used in that folder — i18n translation *keys* (the
+key only; the Hebrew copy stays in `locales/he.json`), view/route identifiers,
+API resource names/paths, HTTP verbs, header names, and storage/cookie keys.
+Import these constants instead of retyping the literal. App-wide constants live
+in `src/constants.js`. This applies to BOTH `frontend/` (web) and
+`frontend-native/` (native). Tailwind/StyleSheet class strings are the only
+exception — they are presentation tokens and stay inline. A guard test
+(`src/constants.test.js` web / `src/lib/constants.guard.test.js` native) fails
+if a centralized literal reappears raw in source; keep it green.
+
+# CI (STRICT)
+GitHub Actions (`.github/workflows/ci.yml`) runs backend `pytest`, web `vitest`,
+and native `jest` on every push and pull request. All three jobs must pass —
+never merge or push changes that break the pipeline, and add/adjust tests so the
+suite stays green.
 
 # Backend Logging
 Use Python's built-in logging module with structured JSON format.
@@ -65,6 +86,3 @@ When I say "execute issue #N":
 2. Implement it according to the acceptance criteria
 3. DO NOT commit. Leave all changes in the working tree for me to review and commit myself (see Git / Version Control rule above).
 4. Reply with a summary of what changed and which acceptance criteria are met. Do not close the issue or open a PR unless I explicitly ask.
-
-
-

@@ -30,6 +30,11 @@ class Reward(TimestampMixin, Base):
     in_stock: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=text("1")
     )
+    # ``is_active`` (record exists/visible) is distinct from ``in_stock``
+    # (temporarily out of stock). Soft delete flips ``is_active`` to 0 (#33).
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("1")
+    )
 
     def __repr__(self) -> str:  # pragma: no cover - debug helper
         return f"<Reward id={self.id} provider={self.provider!r} title={self.title!r}>"

@@ -19,6 +19,13 @@ LIST_FEED_FOR_ORG = (
     "ORDER BY created_at DESC LIMIT :limit"
 )
 
+LIST_FEED_FOR_ORG_PAGED = (
+    f"SELECT {_COLUMNS} FROM posts WHERE organization_id = :organization_id "
+    "ORDER BY created_at DESC, id DESC LIMIT :limit OFFSET :offset"
+)
+
+COUNT_FOR_ORG = "SELECT COUNT(*) AS n FROM posts WHERE organization_id = :organization_id"
+
 LIST_RECEIVED = (
     f"SELECT {_COLUMNS} FROM posts WHERE to_user_id = :user_id "
     "ORDER BY created_at DESC"
