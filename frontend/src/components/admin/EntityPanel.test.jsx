@@ -80,4 +80,32 @@ describe('EntityPanel', () => {
       expect(resource.create).toHaveBeenCalledWith({ title: 'שובר', cost: 120, in_stock: true }),
     );
   });
+
+  it('refetches and re-renders when the config resource changes (tab switch)', async () => {
+    // Regression: switching admin tabs reuses the same EntityPanel instance, so
+    // the list must refetch for the new resource instead of leaving the previous
+    // tab's rows (whose fields don't match the new columns) rendered as '—'.
+    const schoolsRes = resourceWith([{ id: 1, name: 'הרצל', is_active: true }]);
+    const usersRes = resourceWith([{ id: 2, full_name: 'יעל כהן', is_active: true }]);
+    const usersConfig = {
+      resource: usersRes,
+      searchKey: 'admin.searchUsers',
+      addKey: 'admin.addUser',
+      editTitleKey: 'admin.editUser',
+      columns: [
+        { key: 'full_name', labelKey: 'admin.colName' },
+        { key: '__status', labelKey: 'admin.colStatus' },
+      ],
+      fields: [{ name: 'full_name', labelKey: 'admin.colName', type: 'text', required: true }],
+    };
+
+    const { rerender } = render(<EntityPanel config={orgConfig(schoolsRes)} />);
+    await screen.findByText('הרצל');
+
+    rerender(<EntityPanel config={usersConfig} />);
+
+    await screen.findByText('יעל כהן');
+    expect(usersRes.list).toHaveBeenCalled();
+    expect(screen.queryByText('הרצל')).toBeNull();
+  });
 });

@@ -23,7 +23,10 @@ function StatusPill({ on, labels }) {
 
 export default function EntityPanel({ config }) {
   const { t } = useTranslation();
-  const list = useList((params) => config.resource.list(params));
+  // Pass the resource as a dependency so the list refetches when the active
+  // entity (admin tab) changes — otherwise stale rows from the previous tab
+  // would render under the new tab's columns (#bug: name/role showed as '—').
+  const list = useList((params) => config.resource.list(params), [config.resource]);
   const [editing, setEditing] = useState(null); // item or {} for create
   const [busyId, setBusyId] = useState(null);
 

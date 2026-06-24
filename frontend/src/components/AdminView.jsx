@@ -184,7 +184,7 @@ export default function AdminView() {
           <div className="no-sb mb-[22px] mt-[22px] overflow-x-auto">
             <SegTabs active={tab} onChange={setTab} tabs={tabs} />
           </div>
-          {tab === 'analytics' ? <Analytics /> : <EntityPanel config={configs[tab]} />}
+          {tab === 'analytics' ? <Analytics /> : <EntityPanel key={tab} config={configs[tab]} />}
         </>
       )}
     </div>
