@@ -24,6 +24,14 @@ LIST_FEED_FOR_ORG_PAGED = (
     "ORDER BY created_at DESC, id DESC LIMIT :limit OFFSET :offset"
 )
 
+# recognition_value_ids is a JSON column; membership filtering isn't portable
+# across SQL dialects (MySQL JSON_CONTAINS vs. SQLite), so callers fetch every
+# org post unpaginated and filter/paginate in Python (see app.db.posts).
+LIST_FEED_FOR_ORG_ALL = (
+    f"SELECT {_COLUMNS} FROM posts WHERE organization_id = :organization_id "
+    "ORDER BY created_at DESC, id DESC"
+)
+
 COUNT_FOR_ORG = "SELECT COUNT(*) AS n FROM posts WHERE organization_id = :organization_id"
 
 LIST_RECEIVED = (

@@ -37,6 +37,42 @@ function GreetingStrip({ onGive, isMobile, points, remaining, name }) {
   );
 }
 
+function FilterChips({ values, selected, onSelect }) {
+  const { t } = useTranslation();
+  if (!values.length) return null;
+  return (
+    <div className="no-sb flex gap-[9px] overflow-x-auto border-b border-rule py-[16px]">
+      <button
+        type="button"
+        onClick={() => onSelect(null)}
+        className={cx(
+          'shrink-0 cursor-pointer rounded-pill border-[1.5px] px-[14px] py-[8px] font-body text-[14px] font-semibold transition-all duration-1 ease-sy',
+          selected === null ? 'border-ink bg-ink text-paper' : 'border-rule bg-card-cream text-ink-2'
+        )}
+      >
+        {t('feed.filterAll')}
+      </button>
+      {values.map((v) => {
+        const on = selected === v.id;
+        return (
+          <button
+            type="button"
+            key={v.id}
+            onClick={() => onSelect(v.id)}
+            className={cx(
+              'inline-flex shrink-0 cursor-pointer items-center gap-[7px] rounded-pill border-[1.5px] px-[14px] py-[8px] font-body text-[14px] font-semibold transition-all duration-1 ease-sy',
+              on ? 'border-primary bg-primary-50 text-primary' : 'border-rule bg-card-cream text-ink-2'
+            )}
+          >
+            <span className="text-[15px]">{v.emoji}</span>
+            {v.key}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function Spotlight({ entries }) {
   const { t } = useTranslation();
   if (!entries.length) return null;
@@ -68,11 +104,20 @@ export default function FeedView({ onGive, points, allowanceLeft, refreshKey }) 
   const { isMobile } = useViewport();
   const { user } = useMe();
   const [state, setState] = useState({ items: [], spotlight: [], loading: true, error: null });
+  const [values, setValues] = useState([]);
+  const [selectedValue, setSelectedValue] = useState(null);
+
+  useEffect(() => {
+    api.orgValueOptions().then((v) => setValues(v || [])).catch(() => {});
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
     setState((s) => ({ ...s, loading: true, error: null }));
-    Promise.all([api.feed({ limit: 50 }), api.leaderboard()])
+    Promise.all([
+      api.feed({ limit: 50, recognition_value_id: selectedValue || undefined }),
+      api.leaderboard(),
+    ])
       .then(([feed, board]) => {
         if (!cancelled) setState({ items: feed.items || [], spotlight: board || [], loading: false, error: null });
       })
@@ -80,12 +125,13 @@ export default function FeedView({ onGive, points, allowanceLeft, refreshKey }) 
         if (!cancelled) setState((s) => ({ ...s, loading: false, error }));
       });
     return () => { cancelled = true; };
-  }, [refreshKey]);
+  }, [refreshKey, selectedValue]);
 
   return (
     <div className={cx('mx-auto max-w-[760px]', isMobile ? 'px-[16px] pb-[28px] pt-[20px]' : 'px-[28px] pb-[48px] pt-[36px]')}>
       <GreetingStrip onGive={onGive} isMobile={isMobile} points={points} remaining={allowanceLeft} name={user?.full_name} />
       <Spotlight entries={state.spotlight} />
+      <FilterChips values={values} selected={selectedValue} onSelect={setSelectedValue} />
 
       <div className="pt-[10px]">
         {state.loading ? (

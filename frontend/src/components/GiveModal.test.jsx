@@ -8,7 +8,7 @@ vi.mock('../lib/api.js', () => {
     ApiError,
     api: {
       orgMembers: vi.fn().mockResolvedValue([{ id: 2, full_name: 'דוד לוי' }]),
-      orgValues: vi.fn().mockResolvedValue([
+      orgValueOptions: vi.fn().mockResolvedValue([
         { id: 5, key: 'שיתוף פעולה', emoji: '🤝' },
         { id: 6, key: 'מנהיגות', emoji: '🏆' },
       ]),
@@ -34,7 +34,7 @@ describe('GiveModal (#43)', () => {
     render(<GiveModal open onClose={noop} allowanceLeft={40} />);
     expect(screen.getByRole('heading', { name: he.give.title })).toBeInTheDocument();
     await waitFor(() => expect(api.orgMembers).toHaveBeenCalled());
-    expect(api.orgValues).toHaveBeenCalled();
+    expect(api.orgValueOptions).toHaveBeenCalled();
   });
 
   it('submits a recognition via the backend and fires onSent', async () => {
@@ -64,7 +64,7 @@ describe('GiveModal (#43)', () => {
 
   it('warns when points exceed the allowance', async () => {
     render(<GiveModal open onClose={noop} allowanceLeft={3} />);
-    await waitFor(() => expect(api.orgValues).toHaveBeenCalled());
+    await waitFor(() => expect(api.orgValueOptions).toHaveBeenCalled());
     fireEvent.change(screen.getByRole('slider'), { target: { value: '8' } });
     expect(screen.getByText(new RegExp(he.give.overQuota.split('{{')[0].trim()))).toBeInTheDocument();
   });

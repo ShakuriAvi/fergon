@@ -11,6 +11,7 @@ vi.mock('./lib/api.js', () => {
       wallet: vi.fn().mockResolvedValue({ points_balance: 340, allowance_total: 100, allowance_used: 60, allowance_remaining: 40 }),
       feed: vi.fn().mockResolvedValue({ items: [], total: 0 }),
       leaderboard: vi.fn().mockResolvedValue([]),
+      orgValueOptions: vi.fn().mockResolvedValue([]),
       devLogin: vi.fn(),
     },
   };

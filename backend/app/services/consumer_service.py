@@ -28,11 +28,19 @@ def _require_org(organization_id: int | None) -> int:
 
 
 def get_feed(
-    organization_id: int | None, *, limit: int, offset: int
+    organization_id: int | None,
+    *,
+    limit: int,
+    offset: int,
+    recognition_value_id: int | None = None,
 ) -> tuple[list[dict[str, Any]], int]:
+    """Org-scoped feed page, optionally narrowed to one recognition value."""
     org_id = _require_org(organization_id)
     posts, total = posts_db.list_feed_page(
-        organization_id=org_id, limit=limit, offset=offset
+        organization_id=org_id,
+        limit=limit,
+        offset=offset,
+        recognition_value_id=recognition_value_id,
     )
     # Enrich with user names and value details (bulk lookups, no N+1).
     user_ids = [p["from_user_id"] for p in posts] + [p["to_user_id"] for p in posts]

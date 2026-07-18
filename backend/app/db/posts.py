@@ -71,9 +71,33 @@ def list_feed(
 
 
 def list_feed_page(
-    *, organization_id: int, limit: int = 20, offset: int = 0
+    *,
+    organization_id: int,
+    limit: int = 20,
+    offset: int = 0,
+    recognition_value_id: int | None = None,
 ) -> tuple[list[dict[str, Any]], int]:
-    """Org-scoped feed page (most recent first) + total count."""
+    """Org-scoped feed page (most recent first) + total count.
+
+    When ``recognition_value_id`` is given, filters to posts tagged with that
+    value. JSON-array membership isn't portable across SQL dialects, so the
+    filtered path fetches every org post and paginates in Python instead.
+    """
+    if recognition_value_id is not None:
+        with get_session() as session:
+            rows = (
+                session.execute(
+                    text(q.LIST_FEED_FOR_ORG_ALL), {"organization_id": organization_id}
+                )
+                .mappings()
+                .all()
+            )
+        matches = [
+            p for p in (_to_dict(r) for r in rows)
+            if recognition_value_id in p["recognition_value_ids"]
+        ]
+        return matches[offset : offset + limit], len(matches)
+
     with get_session() as session:
         rows = (
             session.execute(

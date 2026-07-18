@@ -6,7 +6,9 @@ organization (tenant isolation via the session, never the client).
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query
+from starlette.requests import Request
 
+from app.core.rate_limit import limiter
 from app.core.security import get_current_user
 from app.schemas.common import Page
 from app.schemas.consumer import (
@@ -26,13 +28,20 @@ router = APIRouter(tags=["consumer"])
 
 
 @router.get("/feed", response_model=Page[FeedItem])
+@limiter.limit("60/minute")
 def get_feed(
+    request: Request,
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
+    recognition_value_id: int | None = Query(default=None),
     current: dict = Depends(get_current_user),
 ) -> Page[FeedItem]:
+    """Org-scoped recognition feed, optionally filtered by recognition value."""
     items, total = svc.get_feed(
-        current.get("organization_id"), limit=limit, offset=offset
+        current.get("organization_id"),
+        limit=limit,
+        offset=offset,
+        recognition_value_id=recognition_value_id,
     )
     return Page[FeedItem](items=items, total=total)
 

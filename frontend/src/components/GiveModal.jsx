@@ -102,7 +102,7 @@ export default function GiveModal({ open, onClose, onSent, allowanceLeft = 40 })
   useEffect(() => {
     if (!open) return;
     setPeer(null); setMsg(''); setValue(null); setPts(5); setSent(false); setBusy(false); setError(null);
-    Promise.all([api.orgMembers(), api.orgValues()])
+    Promise.all([api.orgMembers(), api.orgValueOptions()])
       .then(([m, v]) => { setMembers(m || []); setValues(v || []); })
       .catch(() => {});
   }, [open]);

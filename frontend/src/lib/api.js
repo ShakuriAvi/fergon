@@ -90,7 +90,7 @@ export const api = {
   consumerRewards: () => request('/rewards'),
   leaderboard: () => request('/leaderboard'),
   orgMembers: () => request('/org/members'),
-  orgValues: () => request('/org/values'),
+  orgValueOptions: () => request('/org/values'),
   givePost: (body) => request('/posts', { method: HTTP.POST, body }),
   redeem: (rewardId) => request('/redemptions', { method: HTTP.POST, body: { reward_id: rewardId } }),
 

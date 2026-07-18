@@ -100,6 +100,52 @@ def test_feed_route_requires_auth_and_is_scoped(seeded):
     assert resp.json()["total"] == 6
 
 
+def test_feed_filtered_by_recognition_value(orm_db):
+    from app.db import organization_recognition_values as orv_db
+    from app.db import organizations as orgs_db
+    from app.db import posts as posts_db
+    from app.db import recognition_values as values_db
+
+    oid = orgs_db.create_organization(name="FilterOrg")
+    giver = users_db.create_user(email="g2@o.il", full_name="G2", role="teacher", organization_id=oid)
+    r1 = users_db.create_user(email="r1@o.il", full_name="R1", role="teacher", organization_id=oid)
+    r2 = users_db.create_user(email="r2@o.il", full_name="R2", role="teacher", organization_id=oid)
+    v1 = values_db.create_value(key="ערך א")
+    v2 = values_db.create_value(key="ערך ב")
+    orv_db.add_value(organization_id=oid, recognition_value_id=v1)
+    orv_db.add_value(organization_id=oid, recognition_value_id=v2)
+
+    posts_db.create_post(from_user_id=giver, to_user_id=r1, organization_id=oid, points=3, recognition_value_ids=[v1])
+    posts_db.create_post(from_user_id=giver, to_user_id=r2, organization_id=oid, points=4, recognition_value_ids=[v2])
+    posts_db.create_post(from_user_id=giver, to_user_id=r1, organization_id=oid, points=2, recognition_value_ids=[v1, v2])
+
+    items_v1, total_v1 = svc.get_feed(oid, limit=50, offset=0, recognition_value_id=v1)
+    assert total_v1 == 2
+    assert all(any(v["id"] == v1 for v in it["values"]) for it in items_v1)
+
+    items_v2, total_v2 = svc.get_feed(oid, limit=50, offset=0, recognition_value_id=v2)
+    assert total_v2 == 2
+
+    # No filter still returns everything, unaffected by the new param.
+    _, total_all = svc.get_feed(oid, limit=50, offset=0)
+    assert total_all == 3
+
+
+def test_feed_route_accepts_recognition_value_filter(seeded):
+    from app.db import recognition_values as values_db
+
+    yael = seeded["yael"]
+    value_id = values_db.get_value_by_key("שיתוף פעולה")["id"]
+    client = _client()
+    resp = client.get(
+        "/feed", params={"recognition_value_id": value_id}, headers=_auth(yael)
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["total"] >= 1
+    assert all(any(v["id"] == value_id for v in it["values"]) for it in body["items"])
+
+
 def test_give_and_redeem_flow(seeded):
     from app.db import recognition_values as values_db
 
