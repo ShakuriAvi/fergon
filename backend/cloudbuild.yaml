@@ -1,0 +1,69 @@
+# Cloud Build config for the backend (issue #53). Triggered on push to `main`
+# for changes under backend/** — see infra/gcp/README.md "Stage 5" for how the
+# trigger itself is created (one-time, mostly manual GitHub connection step).
+#
+# Mirrors infra/gcp/deploy-cloud-run.sh's steps (build -> push -> migrate as a
+# release step -> deploy), but `gcloud run deploy`/`jobs update` here only pass
+# --image: Cloud Run keeps the rest of the existing service/job spec (env
+# vars, secrets, service account, Cloud SQL connection, min/max instances)
+# from the last manual deploy, so this file doesn't need to duplicate it.
+steps:
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/api:${SHORT_SHA}
+      - backend
+
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/api:${SHORT_SHA}
+
+  - id: migrate
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - jobs
+      - update
+      - ${_MIGRATE_JOB}
+      - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/api:${SHORT_SHA}
+      - --region=${_REGION}
+      - --quiet
+
+  - id: run-migration
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - jobs
+      - execute
+      - ${_MIGRATE_JOB}
+      - --region=${_REGION}
+      - --wait
+
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE_NAME}
+      - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/api:${SHORT_SHA}
+      - --region=${_REGION}
+      - --quiet
+
+images:
+  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/api:${SHORT_SHA}
+
+substitutions:
+  _REGION: us-central1
+  _REPO_NAME: fergoni
+  _SERVICE_NAME: fergoni-api
+  _MIGRATE_JOB: fergoni-api-migrate
+
+options:
+  logging: CLOUD_LOGGING_ONLY

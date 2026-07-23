@@ -60,6 +60,27 @@ def test_database_url_derived_from_parts():
     assert settings.database_url == "mysql+pymysql://u:p@h:3307/d"
 
 
+def test_database_url_uses_cloud_sql_unix_socket_when_set():
+    """On Cloud Run, INSTANCE_UNIX_SOCKET takes over from host/port."""
+    settings = Settings(
+        MYSQL_USER="u", MYSQL_PASSWORD="p", MYSQL_DB="d",
+        INSTANCE_UNIX_SOCKET="/cloudsql/proj:us-central1:fergoni-mysql",
+        _env_file=None,
+    )
+    assert settings.database_url == (
+        "mysql+pymysql://u:p@/d?unix_socket=/cloudsql/proj:us-central1:fergoni-mysql"
+    )
+
+
+def test_database_url_percent_encodes_special_characters_in_credentials():
+    """A password with URL-reserved characters must not corrupt the DSN."""
+    settings = Settings(
+        MYSQL_USER="u", MYSQL_PASSWORD="p@ss:w/ord?#", MYSQL_HOST="h",
+        MYSQL_PORT=3307, MYSQL_DB="d", _env_file=None,
+    )
+    assert settings.database_url == "mysql+pymysql://u:p%40ss%3Aw%2Ford%3F%23@h:3307/d"
+
+
 def test_settings_is_a_singleton():
     """get_settings/init_settings return the same instance until reset."""
     reset_settings()

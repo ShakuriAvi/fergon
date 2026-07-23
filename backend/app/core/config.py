@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from urllib.parse import quote_plus
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -40,6 +41,10 @@ class Settings(BaseSettings):
     MYSQL_USER: str = "fergoni"
     MYSQL_PASSWORD: str  # required; supplied via env/.env or Secret Manager
     MYSQL_DB: str = "fergoni"
+    # Cloud SQL Unix socket path (e.g. /cloudsql/PROJECT:REGION:INSTANCE), set
+    # only when running on Cloud Run with the built-in Cloud SQL connector.
+    # When present it takes over from MYSQL_HOST/MYSQL_PORT in ``database_url``.
+    INSTANCE_UNIX_SOCKET: str = ""
 
     # Google OAuth 2.0. Endpoint URLs live here (overridable) instead of being
     # hardcoded in the service layer. Redirect URI has no default so each
@@ -78,8 +83,18 @@ class Settings(BaseSettings):
     @property
     def database_url(self) -> str:
         """SQLAlchemy/Alembic-style URL derived from discrete MySQL params."""
+        # Percent-encode credentials: a raw f-string would let an unescaped
+        # reserved character (@, :, /, ?, #, %) in the username/password
+        # corrupt the DSN or, worst case, get parsed as extra query params.
+        user = quote_plus(self.MYSQL_USER)
+        password = quote_plus(self.MYSQL_PASSWORD)
+        if self.INSTANCE_UNIX_SOCKET:
+            return (
+                f"mysql+pymysql://{user}:{password}"
+                f"@/{self.MYSQL_DB}?unix_socket={self.INSTANCE_UNIX_SOCKET}"
+            )
         return (
-            f"mysql+pymysql://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}"
+            f"mysql+pymysql://{user}:{password}"
             f"@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_DB}"
         )
 

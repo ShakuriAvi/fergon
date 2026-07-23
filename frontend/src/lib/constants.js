@@ -34,3 +34,6 @@ export const COOKIE = Object.freeze({
 export const API_PREFIX = Object.freeze({
   ADMIN: '/admin',
 });
+
+/* Fallback API base URL when VITE_API_URL isn't set (local dev only). */
+export const DEFAULT_API_URL = 'http://localhost:8000';

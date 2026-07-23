@@ -6,11 +6,15 @@
    callers can show i18n'd messages. Admin endpoints live under /admin and are
    admin-only on the server. */
 import { getCsrfToken } from './auth.js';
-import { HTTP, HEADER, API_PREFIX } from './constants.js';
+import { HTTP, HEADER, API_PREFIX, DEFAULT_API_URL } from './constants.js';
 
 const UNSAFE_METHODS = new Set([HTTP.POST, HTTP.PUT, HTTP.PATCH, HTTP.DELETE]);
 
-const BASE_URL = (import.meta?.env?.VITE_API_URL || 'http://localhost:8000').replace(/\/$/, '');
+// Vite only statically replaces (and tree-shakes) the direct
+// `import.meta.env.VITE_*` member-access pattern at build time — optional
+// chaining here would silently defeat that, leaving every build pinned to
+// the localhost fallback regardless of VITE_API_URL.
+const BASE_URL = (import.meta.env.VITE_API_URL || DEFAULT_API_URL).replace(/\/$/, '');
 
 export class ApiError extends Error {
   constructor(status, detail) {
