@@ -4,7 +4,13 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from app.core.config import Settings, get_settings, init_settings, reset_settings
+from app.core.config import (
+    Settings,
+    escape_percent_for_configparser,
+    get_settings,
+    init_settings,
+    reset_settings,
+)
 
 
 def test_jwt_secret_is_required_no_insecure_default(monkeypatch):
@@ -79,6 +85,19 @@ def test_database_url_percent_encodes_special_characters_in_credentials():
         MYSQL_PORT=3307, MYSQL_DB="d", _env_file=None,
     )
     assert settings.database_url == "mysql+pymysql://u:p%40ss%3Aw%2Ford%3F%23@h:3307/d"
+
+
+def test_escape_percent_for_configparser_doubles_percent_signs():
+    """A raw URL-encoded password (e.g. %2F) must round-trip through ConfigParser."""
+    import configparser
+
+    url = "mysql+pymysql://u:Q4TEKaA%2F4PYU4HlKVAX9f%2BLce@h:3306/d"
+    escaped = escape_percent_for_configparser(url)
+
+    parser = configparser.ConfigParser()
+    parser.add_section("alembic")
+    parser.set("alembic", "sqlalchemy.url", escaped)  # must not raise
+    assert parser.get("alembic", "sqlalchemy.url") == url
 
 
 def test_settings_is_a_singleton():

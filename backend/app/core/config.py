@@ -137,3 +137,15 @@ def reset_settings() -> None:
     """Drop the cached singleton so the next call rebuilds it (tests only)."""
     global _settings
     _settings = None
+
+
+def escape_percent_for_configparser(value: str) -> str:
+    """Double ``%`` so ``ConfigParser`` interpolation doesn't choke on it.
+
+    Alembic writes ``sqlalchemy.url`` via ``Config.set_main_option``, which
+    goes through a ``ConfigParser`` with interpolation enabled. A literal
+    ``%`` in the value (e.g. from URL-encoded credentials in
+    ``database_url``) is otherwise read as an interpolation escape and raises
+    ``ValueError: invalid interpolation syntax``.
+    """
+    return value.replace("%", "%%")

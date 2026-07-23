@@ -11,7 +11,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from app.core.config import get_settings
+from app.core.config import escape_percent_for_configparser, get_settings
 
 # Importing the models package registers every table on ``Base.metadata``.
 import app.models  # noqa: F401
@@ -20,7 +20,9 @@ from app.models.base import Base
 config = context.config
 
 # Inject the runtime database URL from settings.
-config.set_main_option("sqlalchemy.url", get_settings().database_url)
+config.set_main_option(
+    "sqlalchemy.url", escape_percent_for_configparser(get_settings().database_url)
+)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
