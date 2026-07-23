@@ -39,14 +39,14 @@ def create_app() -> FastAPI:
         except Exception:  # pragma: no cover - best-effort dev convenience
             import logging
 
-            logging.getLogger("fergon.seed").warning(
+            logging.getLogger("fergoni.seed").warning(
                 "dev auto-seed failed (continuing)", exc_info=True
             )
 
     # Interactive API docs leak the full surface area; expose them in dev only.
     docs_enabled = settings.APP_ENV.lower() == "dev"
     app = FastAPI(
-        title="fergon",
+        title="fergoni",
         docs_url="/docs" if docs_enabled else None,
         redoc_url="/redoc" if docs_enabled else None,
         openapi_url="/openapi.json" if docs_enabled else None,

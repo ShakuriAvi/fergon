@@ -3,9 +3,9 @@ services:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
-      MYSQL_DATABASE: ${MYSQL_DB:-fergon}
-      MYSQL_USER: ${MYSQL_USER:-fergon}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-fergon}
+      MYSQL_DATABASE: ${MYSQL_DB:-fergoni}
+      MYSQL_USER: ${MYSQL_USER:-fergoni}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD must be set}
     ports:
       - "3306:3306"
     volumes:
@@ -22,9 +22,9 @@ services:
       APP_ENV: ${APP_ENV:-dev}
       MYSQL_HOST: mysql
       MYSQL_PORT: 3306
-      MYSQL_USER: ${MYSQL_USER:-fergon}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-fergon}
-      MYSQL_DB: ${MYSQL_DB:-fergon}
+      MYSQL_USER: ${MYSQL_USER:-fergoni}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD must be set}
+      MYSQL_DB: ${MYSQL_DB:-fergoni}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       # Required secrets — supplied from the host environment / .env, never baked in.
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}

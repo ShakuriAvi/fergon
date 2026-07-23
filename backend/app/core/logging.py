@@ -17,7 +17,7 @@ from typing import Any
 
 from app.core.config import get_settings
 
-_ACTION_LOGGER_NAME = "fergon.action"
+_ACTION_LOGGER_NAME = "fergoni.action"
 
 
 class JsonFormatter(logging.Formatter):

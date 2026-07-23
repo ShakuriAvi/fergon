@@ -37,9 +37,9 @@ class Settings(BaseSettings):
     # (.env in dev, Secret Manager in prod) so none is baked into source.
     MYSQL_HOST: str = "localhost"
     MYSQL_PORT: int = 3306
-    MYSQL_USER: str = "fergon"
+    MYSQL_USER: str = "fergoni"
     MYSQL_PASSWORD: str  # required; supplied via env/.env or Secret Manager
-    MYSQL_DB: str = "fergon"
+    MYSQL_DB: str = "fergoni"
 
     # Google OAuth 2.0. Endpoint URLs live here (overridable) instead of being
     # hardcoded in the service layer. Redirect URI has no default so each

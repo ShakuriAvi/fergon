@@ -17,7 +17,7 @@ def seeded(orm_db, monkeypatch):
 
     seed.seed_all()
     return {
-        u: users_db.get_user_by_email(f"{u}@fergon.dev")
+        u: users_db.get_user_by_email(f"{u}@fergoni.dev")
         for u in ("yael", "noa", "itai", "michal")
     }
 

@@ -1,6 +1,6 @@
-# פירגון — React (Vite) frontend
+# פירגוני — React (Vite) frontend
 
-The web UI for **פרגון (fergon)**, a Hebrew (RTL) peer-to-peer recognition platform.
+The web UI for **פירגוני (fergoni)**, a Hebrew (RTL) peer-to-peer recognition platform.
 Built with React + Vite, styled with Tailwind, and translated through react-i18next
 (`src/locales/he.json` is the source of truth for all UI text).
 

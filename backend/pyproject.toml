@@ -1,5 +1,5 @@
 [tool.bandit]
-# Security SAST configuration for the fergon backend.
+# Security SAST configuration for the fergoni backend.
 # Run via pre-commit, or directly: bandit -c backend/pyproject.toml -r backend/app
 exclude_dirs = ["tests", "alembic", "logs"]
 # B101: assert_used — assertions are fine in tests; we already exclude tests above.

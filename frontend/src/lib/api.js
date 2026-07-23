@@ -1,4 +1,4 @@
-/* Minimal fetch-based API client for the fergon backend (#34, hardened).
+/* Minimal fetch-based API client for the fergoni backend (#34, hardened).
    Base URL comes from VITE_API_URL. Auth rides on the HttpOnly session cookie
    the server set at login, so requests are sent with credentials: 'include' and
    carry no Bearer header. State-changing requests echo the CSRF cookie back in

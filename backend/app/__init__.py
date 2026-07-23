@@ -1,1 +1,1 @@
-"""fergon backend application package."""
+"""fergoni backend application package."""

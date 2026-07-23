@@ -43,14 +43,14 @@ def test_seed_covers_all_roles_and_dev_login_emails(orm_db, monkeypatch):
     seed.seed_all()
 
     for email in [
-        "admin@fergon.dev", "secretary@fergon.dev", "student@fergon.dev",
-        "server@fergon.dev", "yael@fergon.dev", "avi@fergon.dev",
+        "admin@fergoni.dev", "secretary@fergoni.dev", "student@fergoni.dev",
+        "server@fergoni.dev", "yael@fergoni.dev", "avi@fergoni.dev",
     ]:
         u = users_db.get_user_by_email(email)
         assert u is not None and u["is_active"] is True
 
     roles_present = {
-        users_db.get_user_by_email(f"{k}@fergon.dev")["role"]
+        users_db.get_user_by_email(f"{k}@fergoni.dev")["role"]
         for k in ["admin", "avi", "yael", "secretary", "student", "server"]
     }
     assert {"admin", "principal", "teacher", "secretary", "student", "server"} <= roles_present

@@ -32,9 +32,9 @@ from app.db import users as users_db
 from app.db.queries import allowance_periods as periods_q
 from app.db.session import get_session
 
-logger = logging.getLogger("fergon.seed")
+logger = logging.getLogger("fergoni.seed")
 
-EMAIL_DOMAIN = "fergon.dev"
+EMAIL_DOMAIN = "fergoni.dev"
 
 # --- Content mirrored from frontend/src/data/mock.js -----------------------
 # The Hebrew seed *content* lives in the sibling ``seed_data.json`` data file

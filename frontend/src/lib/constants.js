@@ -22,7 +22,7 @@ export const HEADER = Object.freeze({
 
 /* localStorage key holding the non-sensitive UI session marker. */
 export const STORAGE_KEY = Object.freeze({
-  SESSION: 'fergon_session',
+  SESSION: 'fergoni_session',
 });
 
 /* Readable cookie the server sets for double-submit CSRF. */

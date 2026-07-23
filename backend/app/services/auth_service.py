@@ -20,7 +20,7 @@ from app.db import users as users_db
 from app.schemas.user import ROLE_VALUES, Role, UserCreate, UserRead
 from app.translations.translator import t
 
-logger = logging.getLogger("fergon.auth")
+logger = logging.getLogger("fergoni.auth")
 
 
 def build_google_authorize_url() -> str:

@@ -40,7 +40,7 @@ describe('constants modules', () => {
   it('expose lib magic-strings', () => {
     expect(HTTP).toMatchObject({ GET: 'GET', POST: 'POST', PUT: 'PUT', PATCH: 'PATCH', DELETE: 'DELETE' });
     expect(HEADER.CSRF).toBe('X-CSRF-Token');
-    expect(STORAGE_KEY.SESSION).toBe('fergon_session');
+    expect(STORAGE_KEY.SESSION).toBe('fergoni_session');
     expect(COOKIE.CSRF).toBe('csrf_token');
     expect(API_PREFIX.ADMIN).toBe('/admin');
   });

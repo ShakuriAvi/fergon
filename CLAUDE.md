@@ -1,5 +1,5 @@
 Project Overview
-Build a complete Hebrew (RTL) web app UI for "פרגון" (fergon) — a generic peer-to-peer recognition platform for any organization (schools, companies, restaurants, etc.). Each organization defines its own roles, recognition values, and monthly point allowances. Israel's education system (teachers, principals, counselors, coordinators) is the first/primary example deployment, but the data model (organizations, roles) is organization-agnostic.
+Build a complete Hebrew (RTL) web app UI for "פירגוני" (fergoni) — a generic peer-to-peer recognition platform for any organization (schools, companies, restaurants, etc.). Each organization defines its own roles, recognition values, and monthly point allowances. Israel's education system (teachers, principals, counselors, coordinators) is the first/primary example deployment, but the data model (organizations, roles) is organization-agnostic.
 
 
 # Tech Stack

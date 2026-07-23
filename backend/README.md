@@ -1,6 +1,6 @@
-# fergon backend
+# fergoni backend
 
-FastAPI backend for **פרגון** following a View & Service architecture with a
+FastAPI backend for **פירגוני** following a View & Service architecture with a
 centralized raw-SQL DB layer (no ORM), structured JSON logging, Google OAuth, and
 an action-logging audit trail.
 

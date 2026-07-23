@@ -31,7 +31,7 @@
   "devLogin": {
     "heading": "כניסה למערכת",
     "subtitle": "הזינו דוא״ל לזיהוי המשתמש (סביבת פיתוח בלבד)",
-    "placeholder": "name@fergon.dev",
+    "placeholder": "name@fergoni.dev",
     "signIn": "כניסה",
     "signingIn": "מתחבר…",
     "tryHint": "לניסיון, בחרו אחד מהמשתמשים:"

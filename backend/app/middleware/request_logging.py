@@ -13,7 +13,7 @@ from starlette.requests import Request
 
 from app.core.logging import store_log
 
-logger = logging.getLogger("fergon.request")
+logger = logging.getLogger("fergoni.request")
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):

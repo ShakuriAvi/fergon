@@ -16,7 +16,7 @@ from starlette.requests import Request
 
 from app.db.action_log import insert_action_log
 
-logger = logging.getLogger("fergon.action_log")
+logger = logging.getLogger("fergoni.action_log")
 
 # Requests that are not user actions and should not produce an action-log row.
 _EXCLUDED_PATHS: set[str] = {

@@ -11,7 +11,7 @@ vi.mock('../lib/api.js', () => {
     api: {
       devLogin: vi.fn().mockResolvedValue({
         access_token: 'tok-123',
-        user: { email: 'teacher@fergon.dev', access_level: 'member' },
+        user: { email: 'teacher@fergoni.dev', access_level: 'member' },
       }),
     },
   };
@@ -29,11 +29,11 @@ describe('DevLoginView (#43)', () => {
     render(<DevLoginView onSuccess={onSuccess} />);
 
     fireEvent.change(screen.getByLabelText(he.devLogin.placeholder), {
-      target: { value: 'teacher@fergon.dev' },
+      target: { value: 'teacher@fergoni.dev' },
     });
     fireEvent.click(screen.getByText(he.devLogin.signIn));
 
-    await waitFor(() => expect(api.devLogin).toHaveBeenCalledWith('teacher@fergon.dev'));
+    await waitFor(() => expect(api.devLogin).toHaveBeenCalledWith('teacher@fergoni.dev'));
     // The token is never persisted client-side; only the non-sensitive marker is.
     await waitFor(() => expect(getSession()?.access_level).toBe('member'));
     expect(getSession()?.token).toBeUndefined();

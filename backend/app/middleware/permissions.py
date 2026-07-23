@@ -34,7 +34,7 @@ from app.schemas.role import AccessLevel
 from app.schemas.user import Role
 from app.translations.translator import t
 
-logger = logging.getLogger("fergon.permissions")
+logger = logging.getLogger("fergoni.permissions")
 
 # Routes reachable without authentication.
 PUBLIC_PATHS: set[str] = {

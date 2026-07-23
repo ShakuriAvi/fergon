@@ -12,7 +12,7 @@ import { Button } from './primitives.jsx';
 import { api, ApiError } from '../lib/api.js';
 import { setSession } from '../lib/auth.js';
 
-const SAMPLE_EMAILS = ['admin@fergon.dev', 'principal@fergon.dev', 'teacher@fergon.dev'];
+const SAMPLE_EMAILS = ['admin@fergoni.dev', 'principal@fergoni.dev', 'teacher@fergoni.dev'];
 
 export default function DevLoginView({ heading, onSuccess }) {
   const { t } = useTranslation();
